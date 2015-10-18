@@ -393,11 +393,93 @@ AUXInsertInto* Interpreter::dealInsertInto(AUX* sentence)
     insert_into_packing->setType("insert into");
     return insert_into_packing;
 }
+//delete from 2.table name  3.where 4.(where clause);
+//test: delete from instructor where id  = 123 and name = ' ha ha ' ;
+//      delete from instructor ;
 
 AUXDeleteFrom* Interpreter::dealDeleteFrom(AUX* sentence)
 {
     AUXDeleteFrom* delete_from_packing = new AUXDeleteFrom();
+    stringstream s(sentence->getContent());
+    string word, word2, word3;
     
+    s>>word;
+    //now only one table!!
+    delete_from_packing->setTableName(word);
+    s>>word;
+    //select all attributes;
+    if(word == ";")
+    {
+        delete_from_packing->setIsDeleteAll(true);
+    }
+    else if(word!="where")
+    {
+        delete_from_packing->setType("not valid");
+        return delete_from_packing;
+    }
+    //deal with where sentence..word == where
+    else
+    {
+        delete_from_packing->setIsDeleteAll(false);
+        Where whereTmp;
+        while (true) {
+            s>>word;
+            s>>word2;
+            if(checkAttrNameValid(word) == false)
+            {
+                delete_from_packing->setType("not valid");
+                return delete_from_packing;
+            }
+            whereTmp.attribute = word;
+            if(!(word2 == "<"||word2 == "<="||word2 == ">"||word2 == ">="||word2 == "="||word2 == "!="))
+            {
+                delete_from_packing->setType("not valid");
+                return delete_from_packing;
+            }
+            whereTmp.op = word2;
+            
+            s>>word;
+            if(word == "'"){
+                s>>word;
+                s>>word2;
+                while(word2!="'"){
+                    word = word+" "+word2;
+                    s>>word2;
+                    if(word2 == "")
+                    {
+                        delete_from_packing->setType("not valid");
+                        return delete_from_packing;
+                    }
+                }
+                whereTmp.parameter = word;
+            }
+            //if is a number, float or int..
+            else if(isNumber(word) == true)
+            {
+                whereTmp.parameter = word;
+            }
+            //neither float nor int
+            else{
+                delete_from_packing->setType("not valid");
+                return delete_from_packing;
+            }
+            delete_from_packing->setConditions(whereTmp);
+            
+            s>>word;
+            if(word == ";")
+                break;
+            else if(word == "and")
+            {
+                continue;
+            }
+            else{
+                delete_from_packing->setType("not valid");
+                return delete_from_packing;
+            }
+        }
+    }
+    
+    delete_from_packing->setType("delete from");
     return delete_from_packing;
 }
 
