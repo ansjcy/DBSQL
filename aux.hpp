@@ -54,7 +54,7 @@ public:
     string getTableName(){return table_name;}
     string getContent(){return content;}
 };
-class where
+class Where
 {
 public:
     string attribute;
@@ -76,13 +76,15 @@ public:
     void setAttributes(string attr_name, string attr_type, int length);
     void setPrimaryKeys(string key);
     void setUnique(string unique);
-
+    map<string, string> getAttributes();
+    map<string, int> getAttributesLength();
+    vector<string> getAttributesOrder();
+    string getPrimaryKey();
+    vector<string> getUniqueKeys();
 };
 
 class AUXDropTable : public AUX
 {
-private:
-    int useless;
 public:
     AUXDropTable(){}
 };
@@ -95,6 +97,8 @@ private:
 public:
     void setIndexName(string name);
     void setAttributeName(string name);
+    string getINdexName();
+    string getAttributeName();
 };
 
 class AUXDropIndex : public AUX
@@ -103,6 +107,7 @@ private:
     string index_name;
 public:
     void setIndexName(string name);
+    string getIndexName();
 };
 
 class AUXInsertInto : public AUX
@@ -113,24 +118,38 @@ private:
 public:
     void setAttributes(string value);
     void setValues(string value);
+    vector<string> getAttributeNames();
+    vector<string> getValues();
 };
 
 class AUXSelectFrom : public AUX
 {
 private:
     vector<string> attributes;
-    vector<where> conditions;
+    vector<Where> conditions;
+    bool all_values = false;
+    bool all_attributes = false;
 public:
     void setAttributes(string attribute);
-    void setConditions(where condition);
+    void setConditions(Where condition);
+    void setIsAllValues(bool in);
+    void setIsAllAttributes(bool in);
+    vector<string> getAttributes();
+    vector<Where> getConditions();
+    bool getIsAllValues();
+    bool getIsAllAttributes();
 };
 
 class AUXDeleteFrom : public AUX
 {
 private:
-    vector<where> conditions;
+    vector<Where> conditions;
+    bool delete_all = false;
 public:
-    void setConditions(where condition);
+    void setConditions(Where condition);
+    vector<Where> getConditions();
+    void setIsDeleteAll(bool in);
+    bool getIsDeleteAll();
 };
 
 bool isNumber(string input);

@@ -403,114 +403,121 @@ AUXDeleteFrom* Interpreter::dealDeleteFrom(AUX* sentence)
 
 
 //select 2. xx , xx  3.from 4.table name 5.where 6.(where clause);
-//test: select id , name from instructor where instructor.id  = 123 ;
+//test: select id , name from instructor where id  = 123 and name = ' ha ha ' ;
+//      select * from instructor where id  = 123 ;
+//      select id , name from instructor ;
+//      select * from instructor ;
 AUXSelectFrom* Interpreter::dealSelectFrom(AUX* sentence)
 {
     AUXSelectFrom* select_from_packing = new AUXSelectFrom();
     stringstream s(sentence->getContent());
     string word, word2, word3;
-    bool breakable = false;
     
     s>>word;
-    select_from_packing->setTableName(word);
-    s>>word;
-    if(word != "(")
+    //select all attributes
+    if(word == "*")
     {
-        select_from_packing->setType("not valid");
-        return select_from_packing;
-    }
-    while (true) {
-        s>>word;
         s>>word2;
-        //check the validation of the attr
-        if(checkAttrNameValid(word) == false)
+        if(word2 != "from")
         {
             select_from_packing->setType("not valid");
             return select_from_packing;
         }
-        //end setting the attributes
-        if(word == ";"&&breakable == true)
-            break;
-        //setting the primary key
-        else if(word == "primary" && word2 == "key")
-        {
-            s>>word;
-            if(word!="(")
+        select_from_packing->setIsAllAttributes(true);
+    }
+    else
+    {
+        select_from_packing->setIsAllAttributes(false);
+        while (true) {
+            select_from_packing->setAttributes(word);
+            s>>word2;
+            if(word2 == "from")
+                break;
+            if(word2 != ",")
             {
                 select_from_packing->setType("not valid");
                 return select_from_packing;
             }
+            s>>word;
+        }
+    }
+    //now word2 == from
+    s>>word;
+    //now only one table!!
+    select_from_packing->setTableName(word);
+    s>>word;
+    //select all attributes;
+    if(word == ";")
+    {
+        select_from_packing->setIsAllValues(true);
+    }
+    else if(word!="where")
+    {
+        select_from_packing->setType("not valid");
+        return select_from_packing;
+    }
+    //deal with where sentence..word == where
+    else
+    {
+        select_from_packing->setIsAllValues(false);
+        Where whereTmp;
+        while (true) {
             s>>word;
             s>>word2;
-            if(word2 != ")")
+            if(checkAttrNameValid(word) == false)
             {
                 select_from_packing->setType("not valid");
                 return select_from_packing;
             }
-            select_from_packing->setPrimaryKeys(word);
-        }
-        //setting unique
-        //unique attr can be multiple
-        else if(word == "unique" && word2 == "(")
-        {
-            while (true) {
+            whereTmp.attribute = word;
+            if(!(word2 == "<"||word2 == "<="||word2 == ">"||word2 == ">="||word2 == "="||word2 == "!="))
+            {
+                select_from_packing->setType("not valid");
+                return select_from_packing;
+            }
+            whereTmp.op = word2;
+            
+            s>>word;
+            if(word == "'"){
                 s>>word;
                 s>>word2;
-                select_from_packing->setUnique(word);
-                if(word2 == ",")
-                    continue;
-                else if(word2 == ")")
-                    break;
-                else{
-                    select_from_packing->setType("not valid");
-                    return select_from_packing;
+                while(word2!="'"){
+                    word = word+" "+word2;
+                    s>>word2;
+                    if(word2 == "")
+                    {
+                        select_from_packing->setType("not valid");
+                        return select_from_packing;
+                    }
                 }
+                whereTmp.parameter = word;
             }
-        }
-        //input the attriutes..
-        else{
-            if(word2 == "char" || word2 == "float")
+            //if is a number, float or int..
+            else if(isNumber(word) == true)
             {
-                s>>word3;
-                if(word3 != "(")
-                {
-                    select_from_packing->setType("not valid");
-                    return select_from_packing;
-                }
-                s>>length;
-                s>>word3;
-                if(word3 != ")")
-                {
-                    select_from_packing->setType("not valid");
-                    return select_from_packing;
-                }
+                whereTmp.parameter = word;
             }
-            else if(word2 == "int")
+            //neither float nor int
+            else{
+                select_from_packing->setType("not valid");
+                return select_from_packing;
+            }
+            select_from_packing->setConditions(whereTmp);
+            
+            s>>word;
+            if(word == ";")
+                break;
+            else if(word == "and")
             {
-                length = sizeof(int);
+                continue;
             }
             else{
                 select_from_packing->setType("not valid");
                 return select_from_packing;
             }
-            select_from_packing->setAttributes(word, word2, length);
-        }
-        
-        s>>word3;
-        //save the attribute
-        if(word3 == "," || word3 == ")")
-        {
-            if(word3 == ")")
-                breakable = true;
-            continue;
-        }
-        else
-        {
-            select_from_packing->setType("not valid");
-            return select_from_packing;
         }
     }
     
-    select_from_packing->setType("create table");
+    select_from_packing->setType("select from");
     return select_from_packing;
 }

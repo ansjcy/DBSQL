@@ -22,6 +22,26 @@ void AUXCreateTable::setUnique(string unique_key)
 {
     unique.push_back(unique_key);
 }
+map<string, string> AUXCreateTable::getAttributes()
+{
+    return attributes;
+}
+map<string, int> AUXCreateTable::getAttributesLength()
+{
+    return attributes_length;
+}
+vector<string> AUXCreateTable::getAttributesOrder()
+{
+    return attributes_order;
+}
+string AUXCreateTable::getPrimaryKey()
+{
+    return primary_key;
+}
+vector<string> AUXCreateTable:: getUniqueKeys()
+{
+    return unique;
+}
 //-------------drop table------------
 
 //-------------create index----------
@@ -33,10 +53,23 @@ void AUXCreateIndex::setAttributeName(string name)
 {
     attribute_name = name;
 }
+string AUXCreateIndex::getINdexName()
+{
+    return index_name;
+}
+string AUXCreateIndex::getAttributeName()
+{
+    return attribute_name;
+}
+
 //------------drop index--------------
 void AUXDropIndex::setIndexName(string name)
 {
     index_name = name;
+}
+string AUXDropIndex::getIndexName()
+{
+    return index_name;
 }
 //------------insert into-------------
 void AUXInsertInto::setAttributes(string attribute)
@@ -47,25 +80,69 @@ void AUXInsertInto::setValues(string value)
 {
     values.push_back(value);
 }
+vector<string> AUXInsertInto::getAttributeNames()
+{
+    return attributes_name;
+}
+vector<string> AUXInsertInto::getValues()
+{
+    return values;
+}
+
 //------------select from-------------
 void AUXSelectFrom::setAttributes(string attribute)
 {
     attributes.push_back(attribute);
 }
-void AUXSelectFrom::setConditions(where condition)
+void AUXSelectFrom::setConditions(Where condition)
 {
     conditions.push_back(condition);
+}
+vector<string> AUXSelectFrom::getAttributes()
+{
+    return attributes;
+}
+vector<Where> AUXSelectFrom::getConditions()
+{
+    return conditions;
+}
+void AUXSelectFrom::setIsAllValues(bool in)
+{
+    all_values = in;
+}
+void AUXSelectFrom::setIsAllAttributes(bool in)
+{
+    all_attributes = in;
+}
+bool AUXSelectFrom::getIsAllValues()
+{
+    return all_values;
+}
+bool AUXSelectFrom::getIsAllAttributes()
+{
+    return all_attributes;
 }
 //----------delete from-------------
-void AUXDeleteFrom::setConditions(where condition)
+void AUXDeleteFrom::setConditions(Where condition)
 {
     conditions.push_back(condition);
 }
-
+vector<Where> AUXDeleteFrom::getConditions()
+{
+    return conditions;
+}
+void AUXDeleteFrom::setIsDeleteAll(bool in)
+{
+    delete_all = in;
+}
+bool AUXDeleteFrom::getIsDeleteAll()
+{
+    return delete_all;
+}
 //--------some aux functions--------
 bool isNumber(string input)
 {
-    int countPoint;
+    int countPoint = 0;
     for(int i = 0; i < input.length(); i++)
     {
         if(!((input[i] >= '0' && input[i] <= '9')|| input[i] == '.'))
