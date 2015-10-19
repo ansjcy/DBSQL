@@ -117,7 +117,7 @@ void Node::insert(const AttrType &k, int p, int i) {
 	P.insert(v.begin()+i, p);
 }
 
-void remove(const AttrType &k, int p, int i) {
+void Node::remove(const AttrType &k, int p, int i) {
 	K.erase(v.begin()+i, k);
 	P.erase(v.begin()+i, p);
 }
@@ -125,11 +125,11 @@ void remove(const AttrType &k, int p, int i) {
 };
 
 
-void Node::setRootNode(Node n): rootNode(n) {}
+void BPlusTree::etRootNode(Node n): rootNode(n) {}
 
-void Node::setRootPos(int p): rootP(p) {}
+void BPlusTree::setRootPos(int p): rootP(p) {}
 
-int Node::_findLeaf(const AttrType &k) {
+int BPlusTree::_findLeaf(const AttrType &k) {
 	Node node(bufferManager.getBlock(filename, rootP));
 	int p = rootP;
 	while( !stk.empty() ) {
@@ -151,7 +151,7 @@ int Node::_findLeaf(const AttrType &k) {
 	return p;
 }
 
-void _insertNewBlk(Block &blk1, const AttrType &k, Block &blk2) {
+void BPlusTree::_insertNewBlk(Block &blk1, const AttrType &k, Block &blk2) {
 	Node n1 = Node(blk1), n2 = Node(blk2);
 	if( n1.isRoot() ) {
 		Node newNode(true, false);
@@ -207,7 +207,7 @@ void _insertNewBlk(Block &blk1, const AttrType &k, Block &blk2) {
 	}
 }
 
-void _remove(const Block &blk, AttrType k) {
+void BPlusTree::_remove(const Block &blk, AttrType k) {
 	Node node(blk);
 
 	// delete the corresponding p, k at first
