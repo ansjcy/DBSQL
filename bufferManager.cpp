@@ -31,6 +31,8 @@ void buffer::initial()
 {
     pin = false;
     tag = false;
+    for(int i = 0; i < BUFFERSIZE_LIMIT; i++)
+    	buff[i] = 0;
 }
 
 void buffer::makeChange(void * newData, short ataSize, short buffOffset)
@@ -44,7 +46,7 @@ void buffer::writeBackToDisk()
     fstream file;
     cout << "Class: Buffer, WriteBcakToDisk.\n";
     file.open(fileAddr);
-    file.seekg(fileOffset, ios::beg);
+    file.seekg(fileOffset*BUFFERSIZE_LIMIT, ios::beg);
     file.write(buff, BUFFERSIZE_LIMIT);
     file.close();
 }
@@ -56,7 +58,7 @@ void buffer::readDataFromMem(void * dataAddr, short ataSize, string & fileAddr, 
     this->fileOffset = fileOffset;
     fstream file;
     file.open(fileAddr);
-    file.seekg(fileOffset, ios::beg);
+    file.seekg(fileOffset*BUFFERSIZE_LIMIT, ios::beg);
     file.read(buff + ataSize, BUFFERSIZE_LIMIT - ataSize);
     file.close();
 }
@@ -72,7 +74,7 @@ void buffer::readDataFromDisk(string& fileAddr, long fileOffset)
     //this->elementSize = elementSize;
     fstream file;
     file.open(fileAddr);
-    file.seekg(fileOffset, ios::beg);
+    file.seekg(fileOffset*BUFFERSIZE_LIMIT, ios::beg);
     file.read(buff, BUFFERSIZE_LIMIT);
     file.close();
 }
@@ -138,7 +140,6 @@ bufferManager::bufferManager()
 {
     for(int i = 0; i < BUFFERNUM_LIMIT; i++)
     {
-       // cout << i << endl;
         LRUFree.push_back(i);
     }
 }
@@ -165,7 +166,7 @@ void bufferManager::unlock(long index)
     vector<int>::iterator p_lock = find(LRULocked, index);
     if(p_lock != LRULocked.end())
     {
-        LRULocked.erase(find(LRULocked, index));
+        LRULocked.erase(p_lock);
         LRUOccupied.push_back(index);
         buff[index].pin = false;
     }
@@ -177,7 +178,7 @@ void bufferManager::setTag(long index)
     buff[index].tag = true;
 }
 
-void bufferManager::readData(string& fileAddr, long offset)
+void bufferManager::readData(string& fileAddr, long offset, long index)
 {
    /*
     * 首先判断是否已经读取, 其次, 判断申请是否成功
@@ -187,7 +188,7 @@ void bufferManager::readData(string& fileAddr, long offset)
     cout << "ReadData: " << fileAddr + to_string(offset) << endl;
     if(iter == addr2Index.end())
     {
-        long index = mallocBuffer();
+        //long index = mallocBuffer();
         if(index >= 0)
         {
             addr2Index.insert(pair<string,int>(fileAddr+to_string(offset),index));
@@ -219,10 +220,8 @@ long bufferManager::mallocBuffer()
         //无未被占用的block，但是并非所有都被锁定，则进行LRU替换。
         cout << "MallocBuffer: Okay(2)\n";
         int index = LRUOccupied.front();
-        LRUOccupied.erase(LRUOccupied.begin());
-        LRUOccupied.push_back(index);
-        buff[index].initial();
-        return index;
+        freeBuffer(index);
+        return LRUFree.front();
     }
 }
 
@@ -234,9 +233,7 @@ void bufferManager::freeBuffer(short index)
     p_occu = find(LRUOccupied, index);
     p_free = find(LRUFree, index);
     if(buff[index].tag == true)
-    {
         buff[index].writeBackToDisk();
-    }
     if(p_occu != LRUOccupied.end())
         LRUOccupied.erase(p_occu);
     else if(p_lock != LRULocked.end())

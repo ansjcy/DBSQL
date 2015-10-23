@@ -18,7 +18,7 @@
 #include <sstream>
 using namespace std;
 #define BUFFERSIZE_LIMIT 4096
-#define BUFFERNUM_LIMIT 1024
+#define BUFFERNUM_LIMIT 1
 /*
  class buffer
  负责： 1. 从磁盘读取数据， 参数：磁盘地址（即文件地址），文件偏移，数据量大小
@@ -79,7 +79,7 @@ public:
     void unlock(long index); //finished
     bool isLocked(long index);//finished
     void setTag(long index); //finished
-    void readData(string& fileAddr, long offset);  //从磁盘读 finished
+    void readData(string& fileAddr, long offset, long index);  //从磁盘读 finished
     long mallocBuffer();                          //(finished)返回buffer下标 0～BUFFERNUM_LIMIT
     bool storeData(short index, void* data, long offset, long size); //finish
     void freeBuffer(short index);                  //finished
