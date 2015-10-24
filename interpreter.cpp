@@ -31,7 +31,7 @@ AUX* Interpreter::dealInput()
         return dealInsertInto(sentence);
     else if(sentence->getType() == "delete from")
         return dealDeleteFrom(sentence);
-    else if(sentence->getType() == "select")
+    else if(sentence->getType() == "select from")
         return dealSelectFrom(sentence);
     else
         return sentence;
@@ -55,7 +55,7 @@ AUX* Interpreter::getInput()
     }
     if(command == "select")
     {
-        sentence->setType("select");
+        sentence->setType("select from");
     }
     else if(command == "create"||command == "drop"||command == "insert"||command == "delete")
     {
@@ -389,6 +389,10 @@ AUXInsertInto* Interpreter::dealInsertInto(AUX* sentence)
             }
             
         }
+    }
+    else{
+        insert_into_packing->setType("not valid");
+        return insert_into_packing;
     }
     insert_into_packing->setType("insert into");
     return insert_into_packing;
