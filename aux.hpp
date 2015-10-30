@@ -36,24 +36,6 @@ using namespace std;
  select * from student where sage > 20 and sgender = ‘F’;
  delete from student where sage > 20 and sgender = ‘F’
  */
-class AUX
-{
-protected:
-    string database_name;
-    string table_name;
-    string type;
-    string content;
-    
-public:
-    AUX(){}
-    void setTableName(string name){table_name = name;}
-    void setType(string type_in){type = type_in;}
-    void setContent(string content_in){content = content_in;}
-    string getType(){return type;}
-    string getDatabaseName(){return database_name;}
-    string getTableName(){return table_name;}
-    string getContent(){return content;}
-};
 class Where
 {
 public:
@@ -61,12 +43,45 @@ public:
     string op;
     string parameter;
 };
+class WhereForRecorder
+{
+public:
+    int type;
+    string op;
+    string value;
+    int offset; //the first: 0
+    int length; //int, float: 0,  char: not 0
+};
+
+class AUX
+{
+protected:
+    string database_name;
+    string table_name;
+    string type;
+    string information;
+    string content;
+    
+public:
+    AUX(){}
+    void setTableName(string name){table_name = name;}
+    void setType(string type_in){type = type_in;}
+    void setContent(string content_in){content = content_in;}
+    void setInformation(string info){information = info;}
+    string getType(){return type;}
+    string getInformation(){return information;}
+    string getDatabaseName(){return database_name;}
+    string getTableName(){return table_name;}
+    string getContent(){return content;}
+};
+
 class AUXCreateTable : public AUX
 {
 private:
     //3 variables for attr
     map<string, string> attributes;
     map<string, int> attributes_length;
+    map<string, int> float_size;
     vector<string> attributes_order;
     
     string primary_key;
@@ -74,6 +89,7 @@ private:
 public:
     AUXCreateTable(){}
     void setAttributes(string attr_name, string attr_type, int length);
+    void setFloatSize(string attr_name, int size);
     void setPrimaryKeys(string key);
     void setUnique(string unique);
     map<string, string> getAttributes();
@@ -97,7 +113,7 @@ private:
 public:
     void setIndexName(string name);
     void setAttributeName(string name);
-    string getINdexName();
+    string getIndexName();
     string getAttributeName();
 };
 
@@ -156,6 +172,7 @@ bool isNumber(string input);
 bool isFloat(string input);
 bool isInt(string input);
 bool checkAttrNameValid(string input);
+string normalize(string input);
 
 
 #endif /* aux_hpp */

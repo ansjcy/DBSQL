@@ -27,7 +27,7 @@ using namespace std;
  4. 动态数据写入buffer（比如B+树新生成的节点）
  5. 只有通过bufferManager 才可与buffer交互。
  */
-//assume each record is 
+//assume each record is
 
 
 
@@ -40,7 +40,7 @@ private:
     bool tag;                        //0-no changes 1-changed
     bool pin;
     //short elementSize;
-
+    
     void readDataFromDisk(string& fileAddr, long fileOffset);//, short elementSize);
     void initial();
     void writeBackToDisk();

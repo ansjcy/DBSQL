@@ -1,4 +1,3 @@
-//
 //  interpreter.cpp
 //  MiniSQL
 //
@@ -36,11 +35,18 @@ AUX* Interpreter::dealInput()
     else
         return sentence;
 }
+
+
 //read the input, and return an AUX contains the type, as well as the content...
 AUX* Interpreter::getInput()
 {
+    string norm;
+    getline(cin, norm);
+    norm = normalize(norm);
+    //"create table haha ( dep char ( 20 ) , primary key ( dep ) , unique ( dep ) ) ; "	
+    stringstream sin(norm);
     string command(""), command2(""), content("");
-    cin>>command;
+    sin>>command;
     AUX *sentence = new AUX();
     //quit SQL
     if(command == "quit;"||command =="quit")
@@ -59,7 +65,7 @@ AUX* Interpreter::getInput()
     }
     else if(command == "create"||command == "drop"||command == "insert"||command == "delete")
     {
-        cin>>command2;
+        sin>>command2;
         if(command == "create"||command == "drop"){
             if(command2 != "table" && command2!="index")
             {
@@ -86,7 +92,7 @@ AUX* Interpreter::getInput()
     }
     string contentTmp;
     while (true) {
-        cin>>contentTmp;
+        sin>>contentTmp;
         content = content + " " + contentTmp;
         if(contentTmp == ";")
         {
@@ -98,8 +104,10 @@ AUX* Interpreter::getInput()
 }
 /*
  content: XX ( 3. name type (size), , , );
- test: create table haha ( dep char ( 20 ) , primary key ( dep ) , unique ( dep ) ) ;
+ test: create table haha ( dep char ( 20 ) , age int, aggge float(10), primary key ( dep ) , unique ( dep ) ) ;
 */
+
+
 AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
 {
     AUXCreateTable* create_table_packing = new AUXCreateTable();
@@ -107,6 +115,7 @@ AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
     string word, word2, word3;
     bool breakable = false;
     int length = 0;
+    int float_size = 0;
     
     s>>word;
     create_table_packing->setTableName(word);
@@ -119,15 +128,16 @@ AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
     while (true) {
         s>>word;
         s>>word2;
+        //end setting the attributes
+        if(word == ";"&&breakable == true)
+            break;
+
         //check the validation of the attr
         if(checkAttrNameValid(word) == false)
         {
             create_table_packing->setType("not valid");
             return create_table_packing;
         }
-        //end setting the attributes
-        if(word == ";"&&breakable == true)
-            break;
         //setting the primary key
         else if(word == "primary" && word2 == "key")
         {
@@ -144,6 +154,7 @@ AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
                 create_table_packing->setType("not valid");
                 return create_table_packing;
             }
+            
             create_table_packing->setPrimaryKeys(word);
         }
         //setting unique
@@ -172,10 +183,30 @@ AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
                 if(word3 != "(")
                 {
                     create_table_packing->setType("not valid");
+                    create_table_packing->setInformation("there should be ( after"+word2);
                     return create_table_packing;
                 }
-                s>>length;
+                ////
+                if(word2 == "char"){
+                    s>>length;
+                }
+                else
+                {
+                    s>>float_size;
+                }
+                ////
                 s>>word3;
+                if(word2 == "char" && !(length > 0 && length < 256))
+                {
+                    create_table_packing->setType("not valid");
+                    create_table_packing->setInformation("the length of"+word+"is wrong");
+                    return create_table_packing;
+                }
+                if(word2 == "float")
+                {
+                    length = sizeof(float);
+                    create_table_packing->setFloatSize(word, float_size);
+                }
                 if(word3 != ")")
                 {
                     create_table_packing->setType("not valid");
@@ -188,6 +219,7 @@ AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
             }
             else{
                 create_table_packing->setType("not valid");
+                create_table_packing->setInformation("the type of "+word+" is not correct!");
                 return create_table_packing;
             }
             create_table_packing->setAttributes(word, word2, length);
@@ -208,9 +240,37 @@ AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
         }
     }
     
-    create_table_packing->setType("create table");
+    vector<string> attrs = create_table_packing->getAttributesOrder();
+    vector<string> uniques = create_table_packing->getUniqueKeys();
+    int i = 0, j = 0;
+    //check whether the unique keys are in the attrs..
+    if(uniques.size()!=0)
+    for (i = 0; i < uniques.size(); i++) {
+        for(j = 0; j < attrs.size(); j++)
+        {
+            if(attrs[i] == uniques[j])
+                break;
+        }
+        if(j == attrs.size())
+        {
+            create_table_packing->setType("not valid");
+            return create_table_packing;
+        }
+    }
+    
+    //check whether the primary key is in the attrs.
+    for (i = 0; i < attrs.size(); i++) {
+        if(attrs[i] == create_table_packing->getPrimaryKey())
+        {
+            create_table_packing->setType("create table");
+            return create_table_packing;
+        }
+    }
+    create_table_packing->setType("not valid");
     return create_table_packing;
 }
+
+
 
 // test : drop table haha ;
 AUXDropTable* Interpreter::dealDropTable(AUX* sentence)
@@ -232,6 +292,8 @@ AUXDropTable* Interpreter::dealDropTable(AUX* sentence)
     drop_table_packing->setType("drop table");
     return drop_table_packing;
 }
+
+
 
 //index namexx 3. on  4.table name  (5. attr namexx);
 //test: create index haah on yes ( attr ) ;
@@ -276,6 +338,8 @@ AUXCreateIndex* Interpreter::dealCreateIndex(AUX* sentence)
     return create_index_packing;
 }
 
+
+
 //index name  3. on 4. table name;
 //test : drop index haha on aa ;
 AUXDropIndex* Interpreter::dealDropIndex(AUX* sentence)
@@ -305,6 +369,8 @@ AUXDropIndex* Interpreter::dealDropIndex(AUX* sentence)
     drop_index_packing->setType("drop index");
     return drop_index_packing;
 }
+
+
 
 //2.tableName  3.attr  4.values 5. (the values);
 //test: insert into haha values ( ' qq ' , ' pp ' ) ;
@@ -397,10 +463,12 @@ AUXInsertInto* Interpreter::dealInsertInto(AUX* sentence)
     insert_into_packing->setType("insert into");
     return insert_into_packing;
 }
+
+
+
 //delete from 2.table name  3.where 4.(where clause);
 //test: delete from instructor where id  = 123 and name = ' ha ha ' ;
 //      delete from instructor ;
-
 AUXDeleteFrom* Interpreter::dealDeleteFrom(AUX* sentence)
 {
     AUXDeleteFrom* delete_from_packing = new AUXDeleteFrom();
@@ -486,6 +554,7 @@ AUXDeleteFrom* Interpreter::dealDeleteFrom(AUX* sentence)
     delete_from_packing->setType("delete from");
     return delete_from_packing;
 }
+
 
 
 //select 2. xx , xx  3.from 4.table name 5.where 6.(where clause);

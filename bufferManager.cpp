@@ -7,10 +7,10 @@
 //
 
 /*
-
-
-
-*/
+ 
+ 
+ 
+ */
 
 #include "bufferManager.hpp"
 vector<int>::iterator find(vector<int> & vec, long index)
@@ -25,9 +25,9 @@ vector<int>::iterator find(vector<int> & vec, long index)
 }
 
 /*
-* buffer constructor
-* set tag = false, no change made.
-*/
+ * buffer constructor
+ * set tag = false, no change made.
+ */
 buffer::buffer()
 {
     initial();
@@ -38,15 +38,15 @@ void buffer::initial()
     pin = false;
     tag = false;
     for(int i = 0; i < BUFFERSIZE_LIMIT; i++)
-    	buff[i] = 0;
+        buff[i] = 0;
 }
 /*
-void buffer::makeChange(void * newData, short ataSize, short buffOffset)
-{
-    tag = true;
-    memcpy(buff + buffOffset, newData, ataSize);
-}
-*/
+ void buffer::makeChange(void * newData, short ataSize, short buffOffset)
+ {
+ tag = true;
+ memcpy(buff + buffOffset, newData, ataSize);
+ }
+ */
 void buffer::writeBackToDisk()
 {
     fstream file;
@@ -73,22 +73,22 @@ void buffer::writeBackToDisk()
 }
 
 /*
-void buffer::readDataFromMem(void * dataAddr, short ataSize, string & fileAddr, long fileOffset)
-{
-    memcpy(buff, dataAddr, ataSize);
-    this->fileAddr = fileAddr;
-    this->fileOffset = fileOffset;
-    fstream file;
-    file.open(fileAddr);
-    file.seekg(fileOffset, ios::beg);
-    file.read(buff + ataSize, BUFFERSIZE_LIMIT - ataSize);
-    file.close();
-}
-*/
+ void buffer::readDataFromMem(void * dataAddr, short ataSize, string & fileAddr, long fileOffset)
+ {
+ memcpy(buff, dataAddr, ataSize);
+ this->fileAddr = fileAddr;
+ this->fileOffset = fileOffset;
+ fstream file;
+ file.open(fileAddr);
+ file.seekg(fileOffset, ios::beg);
+ file.read(buff + ataSize, BUFFERSIZE_LIMIT - ataSize);
+ file.close();
+ }
+ */
 /*
-*This function is to read the dada from the disk.
-*You should give the file address and the offset.
-*/
+ *This function is to read the dada from the disk.
+ *You should give the file address and the offset.
+ */
 void buffer::readDataFromDisk(string& fileAddr, long fileOffset)
 {
     this->fileAddr = fileAddr;
@@ -154,7 +154,7 @@ bool bufferManager::storeData(short index, void* data, long offset, long size)
     {
         cout << "Invalid operation!" << endl;
         return false;
-    } 
+    }
     else
     {
         setTag(index);
@@ -209,10 +209,10 @@ void bufferManager::setTag(long index)
 
 void bufferManager::readData(string& fileAddr, long offset, long index)
 {
-   /*
-    * 首先判断是否已经读取, 其次, 判断申请是否成功
-    * 全局偏移
-    */
+    /*
+     * 首先判断是否已经读取, 其次, 判断申请是否成功
+     * 全局偏移
+     */
     map<string, int>::iterator iter;
     iter = addr2Index.find(fileAddr + to_string(offset/BUFFERSIZE_LIMIT));
     cout << "ReadData: " << fileAddr + to_string(offset) << endl;
@@ -234,7 +234,7 @@ long bufferManager::mallocBuffer()
     {
         //如果所有的block都被锁定，则申请失败
         cout << "mallocBuffer: all are locked(0)\n";
-        return -1;       
+        return -1;
     }
     else if( LRUFree.empty() == false)
     {
@@ -258,14 +258,14 @@ long bufferManager::getIndex(string& fileAddr, long offset)
 {
     //BLOCK NUMBER
     offset = offset/BUFFERSIZE_LIMIT;
-
+    
     map<string, int>::iterator iter;
     iter = addr2Index.find(fileAddr + to_string(offset));
     if(iter == addr2Index.end())
         return -1;
     else
         return iter->second;
-
+    
 }
 void bufferManager::freeBuffer(short index, bool choice)
 {

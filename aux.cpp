@@ -7,12 +7,24 @@
 //
 
 #include "aux.hpp"
+#include "recorder.hpp"
+#include "indexManager.hpp"
+#include "catalog_manager.h"
+string tmp = "/Users/jason/Desktop/data";
+recorder rm(tmp);
+IndexManager im;
+CatalogManager cm;
+
 //-------------create table---------
 void AUXCreateTable::setAttributes(string attr_name, string attr_type, int length)
 {
     attributes[attr_name] = attr_type;
     attributes_length[attr_name] = length;
     attributes_order.push_back(attr_name);
+}
+void AUXCreateTable:: setFloatSize(string attr_name, int size)
+{
+    float_size[attr_name] = size;
 }
 void AUXCreateTable::setPrimaryKeys(string key)
 {
@@ -53,7 +65,7 @@ void AUXCreateIndex::setAttributeName(string name)
 {
     attribute_name = name;
 }
-string AUXCreateIndex::getINdexName()
+string AUXCreateIndex::getIndexName()
 {
     return index_name;
 }
@@ -158,12 +170,12 @@ bool isFloat(string input)
 {
     if(isNumber(input) == false)
         return false;
-    for(int i = 0; i < input.length(); i++)
-    {
-        if(input[i] == '.')
-            return true;
-    }
-    return false;
+//    for(int i = 0; i < input.length(); i++)
+//    {
+//        if(input[i] == '.')
+//            return true;
+//    }
+    return true;
 }
 bool isInt(string input)
 {
@@ -184,5 +196,54 @@ bool checkAttrNameValid(string input)
             return false;
     }
     return true;
+}
+
+string normalize(string input)
+{
+    //input = " "+input;
+    //create table haha(dep char (20 ),primary key (dep ) ,unique (dep) );
+    for(int i = 0; i < input.length(); i++)
+    {
+        char a = input.at(i);
+        if(input.at(i) == '(')
+        {
+            input.replace(i, 1, " ( ");
+            i+=2;
+        }
+        else if(input.at(i) == ')')
+        {
+            input.replace(i, 1, " ) ");
+            i+=2;
+        }
+        else if(input.at(i) == ',')
+        {
+            input.replace(i, 1, " , ");
+            i+=2;
+        }
+        else if(input.at(i) == ';')
+        {
+            input.replace(i, 1, " ; ");
+            i+=2;
+        }
+        else if(input.at(i) == '\'')
+        {
+            input.replace(i, 1, " ' ");
+            i+=2;
+        }
+        else if(input.at(i) == '=')
+        {
+            input.replace(i, 1, " = ");
+            i+=2;
+        }
+    }
+    while(input.find("  ") != string::npos)
+    {
+        input.replace(input.find("  "), 2, " ");
+    }
+    if(input.back() == ' ')
+    {
+        input = input.substr(0, input.length()-1);
+    }
+    return input;
 }
 

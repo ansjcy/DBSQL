@@ -10,6 +10,10 @@
 #define api_hpp
 #include "aux.hpp"
 #include "interpreter.hpp"
+#include "indexManager.hpp"
+#include "catalog_manager.h"
+#include "recordManager.hpp"
+#include "recorder.hpp"
 #include <stdio.h>
 //           1.create table 2.XX ( 3. name type (size), , , );
 //           1.drop table 2.xx ;
@@ -21,10 +25,13 @@
 class API{
 private:
     bool isSucceed = true;
-    string information;
+    //string information;
 public:
     void chooseCommand(AUX* command);
-    void printInformation();
+    //void setInformation(string info);
+    void setSucceed(bool success);
+    void printInformation(AUX* command);
+    
     void createTable(AUXCreateTable* cast_command);
     void dropTable(AUXDropTable* cast_command);
     void createIndex(AUXCreateIndex* cast_command);

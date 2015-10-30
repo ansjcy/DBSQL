@@ -292,7 +292,7 @@ bool recorder::createTable(string& tableName, short elementSize)
     fl->setIndex();
     fstream file;
     file.open(tableName, ofstream::out);
-   // for(int i = 0; i < 4096; i++)
+    // for(int i = 0; i < 4096; i++)
     //    file << buff;
     //file.close();
     file.close();
@@ -337,6 +337,7 @@ recorder::~recorder()
     fstream	file;
     remove(dataPath.c_str());
     file.open(dataPath, ofstream::out| ios_base::trunc);
+    cout<<"this is the path::"<<dataPath<<endl;
     int k = freeListVector.size();
     file << k << " ";
     for(int i = 0; i < k; i++)
@@ -502,7 +503,7 @@ bool isCharEqual(char* src, string& op, string& value,int len)
 bool conditionJudge::isSatisfied(char * p)
 {
     vector<WhereForRecorder>::iterator piter;
-    for( piter = cond->begin(); piter != cond.end(); piter++)
+    for( piter = cond->begin(); piter != cond->end(); piter++)
     {
         if(piter->type == 0)
         {
@@ -520,13 +521,14 @@ bool conditionJudge::isSatisfied(char * p)
                 return false;
         }
     }
+    return true;
 }
 
 bool conditionJudge::isSatisfied(void * pt)
 {
     char * p = (char *)pt;
     vector<WhereForRecorder>::iterator piter;
-    for( piter = cond->begin(); piter != cond.end(); piter++)
+    for( piter = cond->begin(); piter != cond->end(); piter++)
     {
         if(piter->type == 0)
         {
@@ -544,6 +546,7 @@ bool conditionJudge::isSatisfied(void * pt)
                 return false;
         }
     }
+    return true;
 }
 
 
