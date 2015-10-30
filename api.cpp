@@ -151,9 +151,7 @@ void API::dropTable(AUXDropTable* cast_command)
     TableInfo table_info;
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
-
-    IndexManager im;
-    CatalogManager cm;
+    
     //table exists? if not, return
     if(!cm.hasTable(table_name))
     {
@@ -182,8 +180,6 @@ void API::createIndex(AUXCreateIndex* cast_command)
     string table_name = cast_command->getTableName();
     string index_name = cast_command->getIndexName();
     string attr_name = cast_command->getAttributeName();
-    IndexManager im;
-    CatalogManager cm;
 
     //table exists? if not , return
     if(!cm.hasTable(table_name))
@@ -233,8 +229,6 @@ void API::dropIndex(AUXDropIndex* cast_command)
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
     string index_name = cast_command->getIndexName();
-    IndexManager im;
-    CatalogManager cm;
     
     //table exists? if not , return
     if(!cm.hasTable(table_name))
@@ -276,8 +270,8 @@ void API::InsertInto(AUXInsertInto* cast_command)
     TableInfo table_info;
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
-
-    
+    char dt[4096];
+    int bias = 0;
     //table exists? if not , return
     if(!cm.hasTable(table_name))
     {
@@ -289,7 +283,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
     table_info = cm.getTableInfo(table_name);
     vector<string> attrs = table_info.getAttrNames();
     vector<string> values;
-
+    
     //has input the attrs
     if(!cast_command->getAttributeNames().empty())
     {
@@ -329,7 +323,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
     {
         int type_id = table_info.getAttr(attrs[i]).getTypeId(); //0:int, 1:float, 2:string.
         int str_length = table_info.getAttr(attrs[i]).getStrLen();
-        if(type_id == 0)
+        if(type_id == 0) //int
         {
             if(!isInt(values[i]))
             {
@@ -339,7 +333,9 @@ void API::InsertInto(AUXInsertInto* cast_command)
             }
             try
             {
-                stoi(values[i]);
+                int tmp = stoi(values[i]);
+                memcpy(dt+bias, &tmp, sizeof(int));
+                bias+=sizeof(int);
             }
             catch(out_of_range error){
                 setSucceed(false);
@@ -347,7 +343,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
                 return;
             }
         }
-        else if(type_id == 2)
+        else if(type_id == 2)  //float
         {
             if(!isFloat(values[i]))
             {
@@ -357,7 +353,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
             }
             try
             {
-                stof(values[i]);
+                float tmp = stof(values[i]);
             }
             catch(out_of_range error){
                 setSucceed(false);
@@ -365,7 +361,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
                 return;
             }
         }
-        else if(type_id == 3)
+        else if(type_id == 3)  //char
         {
             if(values[i].length() > str_length)
             {
@@ -380,7 +376,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
     //check inserting into a unique attr (or primary)
         //use recorder..
     //insert and update index..
-    
+    long offset = rm.insert(<#void *data#>, <#string &tableName#>);
 }
 
 
@@ -390,8 +386,6 @@ void API::selectFrom(AUXSelectFrom* cast_command)
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
     vector<string> attr_selected;
-    IndexManager im;
-    CatalogManager cm;
     
     //@@@@@@@hastable, mind this function..
     if (cm.hasTable(table_name)){
@@ -458,8 +452,6 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
     vector<string> attr_selected;
-    IndexManager im;
-    CatalogManager cm;
     
     //@@@@@@@hastable, mind this function..
     if (cm.hasTable(table_name)){

@@ -357,42 +357,42 @@ bool isIntEqual(int * v1, string& op, string& value)
     if(op == "<")
     {
         if(value.find(".") != string::npos)
-            return *v1 < std::stod(value);
+            return *v1 < std::stoi(value);
         else
             return *v1 < std::stof(value);
     }
     else if(op == ">")
     {
         if(value.find(".") != string::npos)
-            return *v1 > std::stod(value);
+            return *v1 > std::stoi(value);
         else
             return *v1 < std::stof(value);
     }
     else if(op == "=")
     {
         if(value.find(".") != string::npos)
-            return *v1 == std::stod(value);
+            return *v1 == std::stoi(value);
         else
             return *v1 == std::stof(value);
     }
     else if(op == "<=")
     {
         if(value.find(".") != string::npos)
-            return *v1 <= std::stod(value);
+            return *v1 <= std::stoi(value);
         else
             return *v1 <= std::stof(value);
     }
     else if(op == ">=")
     {
         if(value.find(".") != string::npos)
-            return *v1 >= std::stod(value);
+            return *v1 >= std::stoi(value);
         else
             return *v1 >= std::stof(value);
     }
     else if(op == "!=")
     {
         if(value.find(".") != string::npos)
-            return *v1 != std::stod(value);
+            return *v1 != std::stoi(value);
         else
             return *v1 != std::stof(value);
     }
@@ -404,42 +404,42 @@ bool isFloatEqual(float* v1, string& op, string& value)
     if(op == "<")
     {
         if(value.find(".") != string::npos)
-            return *v1 < std::stod(value);
+            return *v1 < std::stoi(value);
         else
             return *v1 < std::stof(value);
     }
     else if(op == ">")
     {
         if(value.find(".") != string::npos)
-            return *v1 > std::stod(value);
+            return *v1 > std::stoi(value);
         else
             return *v1 < std::stof(value);
     }
     else if(op == "=")
     {
         if(value.find(".") != string::npos)
-            return *v1 == std::stod(value);
+            return *v1 == std::stoi(value);
         else
             return *v1 == std::stof(value);
     }
     else if(op == "<=")
     {
         if(value.find(".") != string::npos)
-            return *v1 <= std::stod(value);
+            return *v1 <= std::stoi(value);
         else
             return *v1 <= std::stof(value);
     }
     else if(op == ">=")
     {
         if(value.find(".") != string::npos)
-            return *v1 >= std::stod(value);
+            return *v1 >= std::stoi(value);
         else
             return *v1 >= std::stof(value);
     }
     else if(op == "!=")
     {
         if(value.find(".") != string::npos)
-            return *v1 != std::stod(value);
+            return *v1 != std::stoi(value);
         else
             return *v1 != std::stof(value);
     }

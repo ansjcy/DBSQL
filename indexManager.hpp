@@ -10,7 +10,7 @@
 #define indexManager_hpp
 
 #include <stdio.h>
-#include "aux.hpp"
+#include "auxiliary.hpp"
 class IndexManager
 {
 public:

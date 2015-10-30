@@ -8,7 +8,7 @@
 
 #ifndef api_hpp
 #define api_hpp
-#include "aux.hpp"
+#include "auxiliary.hpp"
 #include "interpreter.hpp"
 #include "indexManager.hpp"
 #include "catalog_manager.h"

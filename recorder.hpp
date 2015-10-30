@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <map>
 #include "bufferManager.hpp"
-#include "aux.hpp"
+#include "auxiliary.hpp"
 
 using namespace std;
 

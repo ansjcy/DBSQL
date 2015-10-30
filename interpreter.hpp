@@ -8,7 +8,7 @@
 
 #ifndef interpreter_hpp
 #define interpreter_hpp
-#include "aux.hpp"
+#include "auxiliary.hpp"
 #include <iostream>
 #include <sstream>
 using namespace std;
