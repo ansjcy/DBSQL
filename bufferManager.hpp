@@ -18,7 +18,7 @@
 #include <sstream>
 using namespace std;
 #define BUFFERSIZE_LIMIT 4096
-#define BUFFERNUM_LIMIT 1
+#define BUFFERNUM_LIMIT 1024
 /*
  class buffer
  负责： 1. 从磁盘读取数据， 参数：磁盘地址（即文件地址），文件偏移，数据量大小
@@ -42,14 +42,10 @@ private:
     //short elementSize;
 
     void readDataFromDisk(string& fileAddr, long fileOffset);//, short elementSize);
-    //void lock();
-    //void unlock();
-    //bool isLocked();
-    //void setTag();
     void initial();
     void writeBackToDisk();
-    void readDataFromMem(void * dataAddr, short ataSize, string & fileAddr, long fileOffset);
-    void makeChange(void * newData, short ataSize, short buffOffset);
+    //void readDataFromMem(void * dataAddr, short ataSize, string & fileAddr, long fileOffset);
+    //void makeChange(void * newData, short ataSize, short buffOffset);
     friend class bufferManager;
     buffer();
 };
@@ -75,14 +71,16 @@ private:
     vector<int> LRULocked;
 public:
     bufferManager();        //finished
+    ~bufferManager();
     void lock(long index);  //finished
     void unlock(long index); //finished
     bool isLocked(long index);//finished
     void setTag(long index); //finished
     void readData(string& fileAddr, long offset, long index);  //从磁盘读 finished
+    long getIndex(string& fileAddr, long offset);
     long mallocBuffer();                          //(finished)返回buffer下标 0～BUFFERNUM_LIMIT
     bool storeData(short index, void* data, long offset, long size); //finish
-    void freeBuffer(short index);                  //finished
+    void freeBuffer(short index, bool choice = true);                  //finished
     //bool reWriteBuffer(short index, void* data, long offset, long size);
     void* retrieveData(short index, long offset);
 };
