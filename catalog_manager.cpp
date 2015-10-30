@@ -11,7 +11,7 @@ void CatalogManager::createTableInfo(const TableInfo& tableInfo) {
 
 void CatalogManager::dropTableInfo(std::string tableName) {
 	// delete the table from the table list first
-	std::ifstream tableListInFile("tableList.txt");
+	std::ifstream tableListInFile("/Users/jason/Desktop/tableList.txt");
 	std::string tmpStr;
 	std::vector<std::string> tableList;
 
@@ -23,7 +23,7 @@ void CatalogManager::dropTableInfo(std::string tableName) {
 
 	tableListInFile.close();
 
-	std::ofstream tableListOutFile("tableList.txt", std::ios::trunc);
+	std::ofstream tableListOutFile("/Users/jason/Desktop/tableList.txt", std::ios::trunc);
 	std::vector<std::string>::iterator it;
 
 	for( it = tableList.begin(); it != tableList.end(); it++ ) {
@@ -39,7 +39,7 @@ void CatalogManager::dropTableInfo(std::string tableName) {
 
 
 TableInfo CatalogManager::getTableInfo(const std::string& tableName) {
-	std::string tmpStr = tableName+".table";
+	std::string tmpStr = "/Users/jason/Desktop/"+tableName+".table";
 	std::ifstream tableFile(tmpStr.c_str());
 	TableInfo tableInfo;
 	
@@ -53,6 +53,7 @@ TableInfo CatalogManager::getTableInfo(const std::string& tableName) {
 	bool hasIndex;
 
 	while( std::getline(tableFile, tmpStr) ) {
+        std::cout<<tmpStr<<std::endl;
 		std::stringstream tmpLineStream(tmpStr);
 		if( isFirstLine ) {
 			tableInfo.setName(tmpStr);
@@ -82,7 +83,11 @@ void CatalogManager::writeTableInfo(const TableInfo& tableInfo) {
 	// write attribute info
 	std::map<std::string, AttrInfo>::iterator it;
 	std::map<std::string, AttrInfo> attrs = tableInfo.getAllAttrs();
-	for( it = attrs.begin(); it != attrs.end(); it++ ) {
+    std::vector<std::string> attr_names = tableInfo.getAttrNames();
+    std::vector<std::string>::iterator it_names;
+	for( /*it = attrs.begin(); it != attrs.end(); it++ */
+        it_names = attr_names.begin(); it_names!=attr_names.end(); it_names++) {
+        it = attrs.find(it_names->data());
 		tableFile << it->second.getName() << " " << it->second.getTypeId() << " " << it->second.getStrLen() << " " << it->second.getIsUnique() << " " << it->second.getIsPrimaryKey() << " " << it->second.getHasIndex() << " " << std::endl;
 	}
 

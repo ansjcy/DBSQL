@@ -143,6 +143,7 @@ vector<void*> recorder::selectNoWhere(string& tableName)
     freeList* fp = freeListVector[index];
     int eachSize = fp->getElementSize();
     int numBlocks = fp->numOfblocks;
+    cout << "In select No Where\n";
     for(int i = 0; i < numBlocks; i++)
     {
         int idx = bm->getIndex(tableName, i*BUFFERSIZE_LIMIT);

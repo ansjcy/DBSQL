@@ -12,7 +12,6 @@
 #include "interpreter.hpp"
 #include "indexManager.hpp"
 #include "catalog_manager.h"
-#include "recordManager.hpp"
 #include "recorder.hpp"
 #include <stdio.h>
 //           1.create table 2.XX ( 3. name type (size), , , );

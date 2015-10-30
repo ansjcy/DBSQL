@@ -7,7 +7,7 @@
 //
 
 #include "api.hpp"
-
+#include <iomanip>
 string file_addr = "/Users/jason/Desktop/";
 extern recorder rm;
 extern CatalogManager cm;
@@ -117,9 +117,14 @@ void API::createTable(AUXCreateTable* cast_command)
     map<string, string>attrs = cast_command->getAttributes();
     map<string, int>attrs_length = cast_command->getAttributesLength();
     map<string, string>::iterator it;
+    vector<string> attr_order = cast_command->getAttributesOrder();
+    vector<string>::iterator newIt;
     map<string, int>::iterator itLen;
     short element_size = 0;
-    for (it = attrs.begin(), itLen = attrs_length.begin(); it != attrs.end(); it++, itLen++) {
+    for (newIt = attr_order.begin() /*it = attrs.begin(),itLen = attrs_length.begin()*/; newIt != attr_order.end();newIt++ /*it++,itLen++*/) {
+        it = attrs.find(newIt->data());
+        itLen = attrs_length.find(newIt->data());
+        
         attr_info.setName(it->first);
         attr_info.setTypeId((it->second == "int")?0:(it->second == "float")?1:(it->second == "char")?2:99);
         element_size+=itLen->second;
@@ -328,7 +333,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
             if(!isInt(values[i]))
             {
                 setSucceed(false);
-                cast_command->setInformation("is is not a integer");
+                cast_command->setInformation(values[i]+" it is not a integer");
                 return;
             }
             try
@@ -343,7 +348,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
                 return;
             }
         }
-        else if(type_id == 2)  //float
+        else if(type_id == 1)  //float
         {
             if(!isFloat(values[i]))
             {
@@ -354,6 +359,8 @@ void API::InsertInto(AUXInsertInto* cast_command)
             try
             {
                 float tmp = stof(values[i]);
+                memcpy(dt+bias, &tmp, sizeof(float));
+                bias+=sizeof(float);
             }
             catch(out_of_range error){
                 setSucceed(false);
@@ -361,7 +368,7 @@ void API::InsertInto(AUXInsertInto* cast_command)
                 return;
             }
         }
-        else if(type_id == 3)  //char
+        else if(type_id == 2)  //char
         {
             if(values[i].length() > str_length)
             {
@@ -369,6 +376,12 @@ void API::InsertInto(AUXInsertInto* cast_command)
                 cast_command->setInformation("char out of bounds");
                 return;
             }
+            for(int j = 0; values[i].length() < str_length; j++)
+            {
+                values[i] = values[i]+" ";
+            }
+            memcpy(dt+bias, values[i].c_str(), str_length);
+            bias+=str_length;
         }
         
         
@@ -376,7 +389,8 @@ void API::InsertInto(AUXInsertInto* cast_command)
     //check inserting into a unique attr (or primary)
         //use recorder..
     //insert and update index..
-    long offset = rm.insert(<#void *data#>, <#string &tableName#>);
+    string tmpFileAddr = file_addr + table_name;
+    long offset = rm.insert(dt, tmpFileAddr);
 }
 
 
@@ -388,7 +402,7 @@ void API::selectFrom(AUXSelectFrom* cast_command)
     vector<string> attr_selected;
     
     //@@@@@@@hastable, mind this function..
-    if (cm.hasTable(table_name)){
+    if (!cm.hasTable(table_name)){
         setSucceed(false);
         cast_command->setInformation("The table has existed!");
         return;
@@ -439,7 +453,33 @@ void API::selectFrom(AUXSelectFrom* cast_command)
         //get index name, get offset, get data..
     //with no index
         //get data
-    
+    string tmpFileAddr = file_addr + table_name;
+    vector<void*> result = rm.selectNoWhere(tmpFileAddr);
+    for(int j = 0; j < result.size(); j++)
+    {
+        int size = 0;
+        for(int i = 0; i < attr_selected.size(); i++)
+        {
+            int type = table_info.getAttr(attr_selected[i]).getTypeId();
+            if(type == 0) //int
+            {
+                cout<<table_info.getAttr(attr_selected[i]).getName()<<" : "<<*(int*)((char*)result[j]+size)<<endl;
+                size += 4;
+                
+            }
+            else if(type == 1) //float
+            {
+                cout<<table_info.getAttr(attr_selected[i]).getName()<<" : "<<*(float*)((char *)result[j]+size)    <<endl;
+                size += 4;
+            }
+            else if(type == 2)
+            {
+                int temp = table_info.getAttr(attr_selected[i]).getStrLen();
+                cout<<table_info.getAttr(attr_selected[i]).getName()<<" : "<<setw(temp) <<(char*)result[j]+size<<endl;
+                size += temp;
+            }
+        }
+    }
     //deal with the same data..
     //print out the table
     
