@@ -96,7 +96,7 @@ void API::setSucceed(bool success)
  */
 
 
-void API::createTable(AUXCreateTable* cast_command)
+void API::createTable(AUXCreateTable* cast_command)  //finish
 {
     TableInfo table_info;
     AttrInfo attr_info;
@@ -270,7 +270,7 @@ void API::dropIndex(AUXDropIndex* cast_command)
 }
 
 
-void API::InsertInto(AUXInsertInto* cast_command)
+void API::InsertInto(AUXInsertInto* cast_command)  //finish
 {
     TableInfo table_info;
     AttrInfo attr_info;
@@ -454,32 +454,131 @@ void API::selectFrom(AUXSelectFrom* cast_command)
     //with no index
         //get data
     string tmpFileAddr = file_addr + table_name;
-    vector<void*> result = rm.selectNoWhere(tmpFileAddr);
-    for(int j = 0; j < result.size(); j++)
-    {
-        int size = 0;
-        for(int i = 0; i < attr_selected.size(); i++)
+    vector<string> attrs = table_info.getAttrNames();
+    
+    //has no where statement!
+    if(where.size() == 0){
+        vector<void*> result = rm.selectNoWhere(tmpFileAddr);
+        
+        //the attrs
+        cout<<"++++++++++++++++++++++++++"<<endl;
+        for(int i = 0; i < attrs.size(); i++)
         {
-            int type = table_info.getAttr(attr_selected[i]).getTypeId();
-            if(type == 0) //int
+            cout<<table_info.getAttr(attrs[i]).getName()<<"\t"<<"\t";
+        }
+        cout<<endl;
+        cout<<"++++++++++++++++++++++++++"<<endl;
+        //the values
+        for(int j = 0; j < result.size(); j++)
+        {
+            int size = 0;
+            for(int i = 0; i < attrs.size(); i++)
             {
-                cout<<table_info.getAttr(attr_selected[i]).getName()<<" : "<<*(int*)((char*)result[j]+size)<<endl;
-                size += 4;
+                int type = table_info.getAttr(attrs[i]).getTypeId();
+                if(type == 0) //int
+                {
+                    cout<<*(int*)((char*)result[j]+size)<<"\t";
+                    size += 4;
                 
+                }
+                else if(type == 1) //float
+                {
+                    cout<<*(float*)((char *)result[j]+size)<<"\t";
+                    size += 4;
+                }
+                else if(type == 2)
+                {
+                    int temp = table_info.getAttr(attrs[i]).getStrLen();
+                    cout<<setw(temp) <<(char*)result[j]+size<<"\t";
+                    size += temp;
+                }
             }
-            else if(type == 1) //float
-            {
-                cout<<table_info.getAttr(attr_selected[i]).getName()<<" : "<<*(float*)((char *)result[j]+size)    <<endl;
-                size += 4;
-            }
-            else if(type == 2)
-            {
-                int temp = table_info.getAttr(attr_selected[i]).getStrLen();
-                cout<<table_info.getAttr(attr_selected[i]).getName()<<" : "<<setw(temp) <<(char*)result[j]+size<<endl;
-                size += temp;
-            }
+            cout<<endl;
         }
     }
+    else{
+        vector<WhereForRecorder>* cond = new vector<WhereForRecorder>;
+        WhereForRecorder tmp;
+        /*
+         int type;
+         string op;
+         string value;
+         int offset; //the first: 0
+         int length;
+         */
+        for(int i = 0; i < where.size(); i++)
+        {
+            string attribute_name = where[i].attribute;
+            tmp.type = table_info.getAttr(attribute_name).getTypeId();
+            tmp.op = where[i].op;
+            tmp.value = where[i].parameter;
+            int tmp_offset = 0;
+            for(int j = 0; j < table_info.getAttrNames().size(); j++)
+            {
+                if(table_info.getAttrNames()[j] == where[i].attribute)
+                    break;
+                int type = table_info.getAttr(table_info.getAttrNames()[j]).getTypeId();
+                if(type == 0)
+                {
+                    tmp_offset+=4;
+                }
+                else if(type == 1)
+                {
+                    tmp_offset+=4;
+                }
+                else
+                {
+                    tmp_offset+=table_info.getAttr(table_info.getAttrNames()[j]).getStrLen();
+                }
+            }
+            tmp.offset = tmp_offset;
+            tmp.length = table_info.getAttr(where[i].attribute).getStrLen();
+            cond->push_back(tmp);
+        }
+        int element_size = 0;
+        for(int i = 0; i < table_info.getAttrNames().size(); i++)
+        {
+            element_size+=table_info.getAllAttrs()[table_info.getAttrNames()[i]].getStrLen();
+        }
+        conditionJudge jd(cond, element_size);
+        vector<void*> result = rm.selectWhereNoIndex(tmpFileAddr, jd);
+        //cout << "Result Size is: " <<  result.size() << "\n";
+        cout<<"++++++++++++++++++++++++++"<<endl;
+        for(int i = 0; i < attrs.size(); i++)
+        {
+            cout<<table_info.getAttr(attrs[i]).getName()<<"\t"<<"\t";
+        }
+        cout<<endl;
+        cout<<"++++++++++++++++++++++++++"<<endl;
+        for(int j = 0; j < result.size(); j++)
+        {
+            int size = 0;
+            for(int i = 0; i < attrs.size(); i++)
+            {
+                int type = table_info.getAttr(attrs[i]).getTypeId();
+                if(type == 0) //int
+                {
+                    cout<<*(int*)((char*)result[j]+size)<<"\t";
+                    size += 4;
+                    
+                }
+                else if(type == 1) //float
+                {
+                    cout<<*(float*)((char *)result[j]+size)<<"\t";
+                    size += 4;
+                }
+                else if(type == 2)
+                {
+                    int temp = table_info.getAttr(attrs[i]).getStrLen();
+                    cout<<setw(temp) <<(char*)result[j]+size<<"\t";
+                    size += temp;
+                }
+            }
+            cout<<endl;
+        }
+
+    }
+    cout<<"++++++++++++++++++++++++++"<<endl;
     //deal with the same data..
     //print out the table
     
@@ -494,9 +593,9 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
     vector<string> attr_selected;
     
     //@@@@@@@hastable, mind this function..
-    if (cm.hasTable(table_name)){
+    if (!cm.hasTable(table_name)){
         setSucceed(false);
-        cast_command->setInformation("The table has existed!");
+        cast_command->setInformation("The table does not exists!");
         return;
     }
     table_info = cm.getTableInfo(table_name);
@@ -517,12 +616,67 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
             return;
         }
     }
+    //do the deleting
+    string tmpFileAddr = file_addr + table_name;
     if (cast_command->getIsDeleteAll()) {
         //delete in recorder
+        rm.deleteNoWhere(tmpFileAddr);
         //update index
     }
     else{
-        
+        vector<WhereForRecorder>* cond = new vector<WhereForRecorder>;
+        WhereForRecorder tmp;
+        /*
+         int type;
+         string op;
+         string value;
+         int offset; //the first: 0
+         int length;
+         */
+        for(int i = 0; i < where.size(); i++)
+        {
+            string attribute_name = where[i].attribute;
+            tmp.type = table_info.getAttr(attribute_name).getTypeId();
+            tmp.op = where[i].op;
+            tmp.value = where[i].parameter;
+            int tmp_offset = 0;
+            for(int j = 0; j < table_info.getAttrNames().size(); j++)
+            {
+                if(table_info.getAttrNames()[j] == where[i].attribute)
+                    break;
+                int type = table_info.getAttr(table_info.getAttrNames()[j]).getTypeId();
+                if(type == 0)
+                {
+                    tmp_offset+=4;
+                }
+                else if(type == 1)
+                {
+                    tmp_offset+=4;
+                }
+                else
+                {
+                    tmp_offset+=table_info.getAttr(table_info.getAttrNames()[j]).getStrLen();
+                }
+            }
+            tmp.offset = tmp_offset;
+            tmp.length = table_info.getAttr(where[i].attribute).getStrLen();
+            cond->push_back(tmp);
+        }
+        int element_size = 0;
+        for(int i = 0; i < table_info.getAttrNames().size(); i++)
+        {
+            element_size+=table_info.getAllAttrs()[table_info.getAttrNames()[i]].getStrLen();
+        }
+        conditionJudge jd(cond, element_size);
+        if(!rm.deleteWhereNoIndex(tmpFileAddr, jd))
+        {
+            setSucceed(false);
+            cast_command->setInformation("delete failed!!!!!");
+            return;
+        }
+        else{
+            cout<<"Success!"<<endl;
+        }
     }
     //has index
     //has no index..

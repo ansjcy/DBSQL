@@ -95,6 +95,7 @@ vector<void*> recorder::selectWhereNoIndex(string& tableName, conditionJudge& ju
         int idx = bm->getIndex(tableName, i*BUFFERSIZE_LIMIT);
         if(idx == -1)
         {
+            //cout << "selectWhereNoIndex: idx == -1 \n";
             idx = bm->mallocBuffer();
             bm->readData(tableName, i*BUFFERSIZE_LIMIT, idx);
         }
@@ -122,7 +123,7 @@ vector<void*> recorder::selectWhereIndex(string& tableName, vector<long> offset,
         int idx = bm->getIndex(tableName, *p);
         if(idx == -1)
         {
-            cout << "WHere NoIndex: \n";
+            //cout << "WHere NoIndex: \n";
             idx = bm->mallocBuffer();
             bm->readData(tableName, *p, idx);
         }
@@ -136,6 +137,17 @@ vector<void*> recorder::selectWhereIndex(string& tableName, vector<long> offset,
     return vec;
 }
 
+bool recorder::updateWhere(string& tableName, long offset, void* data)
+{
+    fstream file;
+    file.open(tableName, ofstream::out);
+    file.seekg(offset, ios::beg);
+    file.write((char*)data, BUFFERSIZE_LIMIT);
+    file.close();
+    return true;
+}
+
+
 vector<void*> recorder::selectNoWhere(string& tableName)
 {
     int index = table2Freelist[tableName];
@@ -143,14 +155,14 @@ vector<void*> recorder::selectNoWhere(string& tableName)
     freeList* fp = freeListVector[index];
     int eachSize = fp->getElementSize();
     int numBlocks = fp->numOfblocks;
-    cout << "In select No Where\n";
+    //cout << "In select No Where\n";
     for(int i = 0; i < numBlocks; i++)
     {
         int idx = bm->getIndex(tableName, i*BUFFERSIZE_LIMIT);
         if(idx == -1)
         {
             idx = bm->mallocBuffer();
-            cout << "SelectNoWhere: idx == -1 \n";
+            //cout << "SelectNoWhere: idx == -1 \n";
             bm->readData(tableName, i*BUFFERSIZE_LIMIT, idx);
         }
         for(int k = 0; (k+1)*eachSize < BUFFERSIZE_LIMIT; k++)
@@ -168,21 +180,21 @@ vector<void*> recorder::selectNoWhere(string& tableName)
 
 long recorder::insert(void* data, string& tableName)
 {
-    cout << "in Insert function \n";
+    //cout << "in Insert function \n";
     int index = table2Freelist[tableName];
     freeList* fp = freeListVector[index];
     long offset;
     
     if(fp->isEmpty() == true)
         fp->setIndex();
-    cout << "step 2\n";
+    //cout << "step 2\n";
     offset = fp->getNext();
-    cout << "Get offset: " << offset << endl;
+    //cout << "Get offset: " << offset << endl;
     index = bm->getIndex(tableName, offset);
     if(index == -1)
     {
         index = bm->mallocBuffer();
-        cout << "Malloc a new Buffer at " << index << "\n";
+        //cout << "Malloc a new Buffer at " << index << "\n";
         bm->readData(tableName, offset, index);
     }
     bm->storeData(index, data, offset, fp->elementSize);
@@ -207,11 +219,11 @@ bool recorder::deleteWhereIndex(string& tableName, long offset, conditionJudge& 
         bm->readData(tableName, offset, index);
     }
     p = bm->retrieveData(index, offset);
-    cout << "No where" << endl;
+    //cout << "No where" << endl;
     if(judger.isSatisfied(p) == true) //&& isAllZero((char *)p, eachSize) == false)
     {
         bm->storeData(index, ch, offset, eachSize);
-        cout << "delete Successfully\n" << "eachSize: " << eachSize << endl;
+        //cout << "delete Successfully\n" << "eachSize: " << eachSize << endl;
         fp->addElement(offset);
     }
     
@@ -229,6 +241,7 @@ bool recorder::deleteWhereNoIndex(string& tableName, conditionJudge& judger)
     eachSize = fp->elementSize;
     for(int i = 0; i < num; i++)
     {
+        
         int index = bm->mallocBuffer();
         bm->readData(tableName, i*BUFFERSIZE_LIMIT, index);
         for(int j = 0; (j+1)*eachSize < 4096; j++)
@@ -236,11 +249,11 @@ bool recorder::deleteWhereNoIndex(string& tableName, conditionJudge& judger)
             p = bm->retrieveData(index, j*eachSize + i*BUFFERSIZE_LIMIT);
             if(judger.isSatisfied(p) == true)
             {
-                cout << "I'am storing data\n";
+                //cout << "I'am storing data\n";
                 bm->storeData(index, ch, j*eachSize + i*BUFFERSIZE_LIMIT, eachSize);
                 fp->addElement(j*eachSize);
             }
-            cout << "Delete Where No Index\n";
+            //cout << "Delete Where No Index\n";
         }
     }
     return true;
@@ -279,7 +292,7 @@ bool recorder::deleteNoWhere(string& tableName)
 bool recorder::createTable(string& tableName, short elementSize)
 {
     if(table2Freelist.find(tableName) != table2Freelist.end()) return false;
-    cout << "Oh fuck\n";
+    //cout << "Oh fuck\n";
     string filePath = tableName+"freeList";
     fstream newfile;
     newfile.open(filePath, ofstream::out);
@@ -315,11 +328,11 @@ recorder::recorder(string& fileAddr)
     string tableName, dataPath;
     int k = 0;
     short elementSize;
-    cout << "Recorder: read in size: " << size << endl;
+    //cout << "Recorder: read in size: " << size << endl;
     while(k < size)
     {
         file >> tableName >> dataPath >> elementSize;
-        cout << "File in: tableName:" << tableName << "\ndataPath: " <<dataPath << "\nelementSize: " << elementSize << endl;
+        //cout << "File in: tableName:" << tableName << "\ndataPath: " <<dataPath << "\nelementSize: " << elementSize << endl;
         freeListVector.push_back(new freeList(dataPath, elementSize));
         table2Freelist.insert(pair<string, int>(tableName, k));
         freelist2Table.insert(pair<int, string>(k, tableName));
@@ -338,7 +351,7 @@ recorder::~recorder()
     fstream	file;
     remove(dataPath.c_str());
     file.open(dataPath, ofstream::out| ios_base::trunc);
-    cout<<"this is the path::"<<dataPath<<endl;
+    //cout<<"this is the path::"<<dataPath<<endl;
     int k = freeListVector.size();
     file << k << " ";
     for(int i = 0; i < k; i++)
@@ -451,49 +464,50 @@ bool isCharEqual(char* src, string& op, string& value,int len)
 {
     if(op == "<")
     {
-        for(int i = 0; i < len; i++)
+        for(int i = 0; i < value.length(); i++)
         {
-            if(src[i] >= value[i])
+            if(src[i] >= value.at(i))
                 return false;
         }
     }
     else if(op == ">")
     {
-        for(int i = 0; i < len; i++)
+        for(int i = 0; i < value.length(); i++)
         {
-            if(src[i] <= value[i])
+            if(src[i] <= value.at(i))
                 return false;
         }
     }
     else if(op == "=")
     {
-        for(int i = 0; i < len; i++)
+        for(int i = 0; i < value.length(); i++)
         {
-            if(src[i] != value[i])
+            //cout << "Compare: " << src[i] << " " << value.at(i) << endl;
+            if(src[i] != value.at(i))
                 return false;
         }
     }
     else if(op == "<=")
     {
-        for(int i = 0; i < len; i++)
+        for(int i = 0; i < value.length(); i++)
         {
-            if(src[i] > value[i])
+            if(src[i] > value.at(i))
                 return false;
         }
     }
     else if(op == ">=")
     {
-        for(int i = 0; i < len; i++)
+        for(int i = 0; i < value.length(); i++)
         {
-            if(src[i] < value[i])
+            if(src[i] < value.at(i))
                 return false;
         }
     }
     else if(op == "!=")
     {
-        for(int i = 0; i < len; i++)
+        for(int i = 0; i < value.length(); i++)
         {
-            if(src[i] == value[i])
+            if(src[i] == value.at(i))
                 return false;
         }
     }
@@ -503,21 +517,32 @@ bool isCharEqual(char* src, string& op, string& value,int len)
 
 bool conditionJudge::isSatisfied(char * p)
 {
+    
+    bool flag = false;
+    for(int i = 0; i < elementSize; i++)
+    {
+        if(p[i] != 0)
+            flag = true;
+    }
+    if(flag == false) return false;
     vector<WhereForRecorder>::iterator piter;
     for( piter = cond->begin(); piter != cond->end(); piter++)
     {
         if(piter->type == 0)
         {
+            //cout << "FUCK TYPE0\n";
             if(isIntEqual((int*)(p+piter->offset),piter->op,piter->value) == false)
                 return false;
         }
         else if(piter->type == 1)
         {
+            //cout << "FUCK TYPE1\n";
             if(isFloatEqual((float*)(p+piter->offset),piter->op,piter->value) == false)
                 return false;
         }
-        else
+        else if(piter->type == 2)
         {
+            //cout << "FUCK TYPE2" << *p << endl;
             if(isCharEqual((char*)(p+piter->offset),piter->op,piter->value, piter->length) == false)
                 return false;
         }
@@ -528,6 +553,13 @@ bool conditionJudge::isSatisfied(char * p)
 bool conditionJudge::isSatisfied(void * pt)
 {
     char * p = (char *)pt;
+    bool flag = false;
+    for(int i = 0; i < elementSize; i++)
+    {
+        if(p[i] != 0)
+            flag = true;
+    }
+    if(flag == false) return false;
     vector<WhereForRecorder>::iterator piter;
     for( piter = cond->begin(); piter != cond->end(); piter++)
     {

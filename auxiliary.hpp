@@ -73,6 +73,7 @@ public:
     string getDatabaseName(){return database_name;}
     string getTableName(){return table_name;}
     string getContent(){return content;}
+    bool quit;
 };
 
 class AUXCreateTable : public AUX

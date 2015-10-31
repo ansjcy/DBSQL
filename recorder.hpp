@@ -56,10 +56,12 @@ class conditionJudge
 {
 private:
     vector<WhereForRecorder>* cond;
+    int elementSize;
 public:
-    conditionJudge(vector<WhereForRecorder>* cond):cond(cond){};
+    conditionJudge(vector<WhereForRecorder>* cond, int elementSize):cond(cond), elementSize(elementSize){};
     bool isSatisfied(char *p);
     bool isSatisfied(void *pt);
+    ~conditionJudge(){delete cond;}
 };
 
 
@@ -78,7 +80,7 @@ public:
     bool createTable(string& tableName, short elementSize);//finish
     
     bool deleteNoWhere(string& tableName);//fiish
-    
+    bool updateWhere(string& tableName, long offset, void * data);
     bool deleteWhereNoIndex(string& tableName, conditionJudge& judger);
     bool deleteWhereIndex(string& tableName, long offset, conditionJudge& judger);
     

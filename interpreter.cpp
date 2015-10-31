@@ -6,6 +6,8 @@
 //
 
 #include "interpreter.hpp"
+#include "recorder.hpp"
+extern recorder rm;
 //read word: 1.create table 2.XX ( 3. name type (size), , , );
 //           1.drop table 2.xx ;
 //           1.create index 2.index namexx 3. on  4.table name  (5. attr namexx);
@@ -49,9 +51,12 @@ AUX* Interpreter::getInput()
     sin>>command;
     AUX *sentence = new AUX();
     //quit SQL
-    if(command == "quit;"||command =="quit")
+    if(command == "quit;"||command =="quit"){
+        sentence->quit = true;
+    }
+    else
     {
-        exit(0);
+        sentence->quit = false;
     }
     //the first word cannot be the end..
     if(command.back()==';')

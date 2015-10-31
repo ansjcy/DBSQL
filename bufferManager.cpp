@@ -50,7 +50,7 @@ void buffer::initial()
 void buffer::writeBackToDisk()
 {
     fstream file;
-    cout << "Class: Buffer, WriteBcakToDisk.\n";
+    //cout << "Class: Buffer, WriteBcakToDisk.\n";
     
     file.open(fileAddr); //ofstream::out|ios_base::app);
     file.seekg(0,ios::end);
@@ -61,7 +61,7 @@ void buffer::writeBackToDisk()
         file.open(fileAddr, ofstream::out);
     else
         file.open(fileAddr, ofstream::out|ios_base::app);
-    cout << "fileOffset: " << fileOffset << endl;
+    //cout << "fileOffset: " << fileOffset << endl;
     //file.seekg(0,ios::end);
     //long fsize = file.tellg();
     //if(fsize > fileOffset*BUFFERSIZE_LIMIT)
@@ -127,38 +127,38 @@ bool bufferManager::storeData(short index, void* data, long offset, long size)
     offset = offset - offset/4096*4096;
     if(isLocked(index) == true)
     {
-        cout << "Buffer is locked! It cannot be rewritten!" << endl;
+        //cout << "Buffer is locked! It cannot be rewritten!" << endl;
         return false;
     }
     else if(data == NULL)
     {
-        cout << "Invalid data, access NULL!" << endl;
+        //cout << "Invalid data, access NULL!" << endl;
         return false;
     }
     else if(index < 0)
     {
-        cout << "Invalid index, index < 0!" << endl;
+        //cout << "Invalid index, index < 0!" << endl;
         return false;
     }
     else if(offset < 0 || offset > BUFFERSIZE_LIMIT)
     {
-        cout << "Invalid Offset, offset < 0 or offset > " << BUFFERSIZE_LIMIT << " is not allowed!" << endl;
+        //cout << "Invalid Offset, offset < 0 or offset > " << BUFFERSIZE_LIMIT << " is not allowed!" << endl;
         return false;
     }
     else if(size + offset > BUFFERSIZE_LIMIT)
     {
-        cout << "Size Exceeds limit!" << endl;
+        //cout << "Size Exceeds limit!" << endl;
         return false;
     }
     else if(addr2Index.count(buff[index].fileAddr  + to_string(buff[index].fileOffset)) != 1)
     {
-        cout << "Invalid operation!" << endl;
+        //cout << "Invalid operation!" << endl;
         return false;
     }
     else
     {
         setTag(index);
-        cout << "In storeData: " << offset << endl;
+        //cout << "In storeData: " << offset << endl;
         memcpy(buff[index].buff + offset, data, size);
         return true;
     }
@@ -170,7 +170,7 @@ bufferManager::bufferManager()
     {
         LRUFree.push_back(i);
     }
-    cout << "Construct BufferManager Successfully!" << endl;
+    //cout << "Construct BufferManager Successfully!" << endl;
 }
 
 void bufferManager::lock(long index)
@@ -215,7 +215,7 @@ void bufferManager::readData(string& fileAddr, long offset, long index)
      */
     map<string, int>::iterator iter;
     iter = addr2Index.find(fileAddr + to_string(offset/BUFFERSIZE_LIMIT));
-    cout << "ReadData: " << fileAddr + to_string(offset) << endl;
+    //cout << "ReadData: " << fileAddr + to_string(offset) << endl;
     if(iter == addr2Index.end())
     {
         //long index = mallocBuffer();
@@ -223,7 +223,7 @@ void bufferManager::readData(string& fileAddr, long offset, long index)
         {
             addr2Index.insert(pair<string,int>(fileAddr+to_string(offset/BUFFERSIZE_LIMIT),index));
             buff[index].readDataFromDisk(fileAddr, offset/BUFFERSIZE_LIMIT);
-            cout << "Read Data finished in index: " << index << buff[index].buff[231] <<  buff[index].buff[232] << endl;
+            //cout << "Read Data finished in index: " << index << buff[index].buff[231] <<  buff[index].buff[232] << endl;
         }
     }
 }
@@ -233,13 +233,13 @@ long bufferManager::mallocBuffer()
     if(LRUFree.empty() == true && LRUOccupied.empty() == true)
     {
         //如果所有的block都被锁定，则申请失败
-        cout << "mallocBuffer: all are locked(0)\n";
+        //cout << "mallocBuffer: all are locked(0)\n";
         return -1;
     }
     else if( LRUFree.empty() == false)
     {
         //有未被占用的block
-        cout << "MallocBuffer: Okay(1) \n";
+        //cout << "MallocBuffer: Okay(1) \n";
         int index = LRUFree.front();
         LRUFree.erase(LRUFree.begin());
         LRUOccupied.push_back(index);
@@ -248,7 +248,7 @@ long bufferManager::mallocBuffer()
     else
     {
         //无未被占用的block，但是并非所有都被锁定，则进行LRU替换。
-        cout << "MallocBuffer: Okay(2)\n";
+        //cout << "MallocBuffer: Okay(2)\n";
         int index = LRUOccupied.front();
         freeBuffer(index);
         return LRUFree.front();
@@ -283,14 +283,14 @@ void bufferManager::freeBuffer(short index, bool choice)
     buff[index].initial();
     if(p_free == LRUFree.end())
         LRUFree.push_back(index);
-    cout << "FreeBuffer: Succeed to free buffer\n";
+    //cout << "FreeBuffer: Succeed to free buffer\n";
 }
 
 bufferManager::~bufferManager()
 {
     map<string,int>::iterator its;
     vector<int> index;
-    cout << "Size of Map: " << addr2Index.size() << endl;
+    //cout << "Size of Map: " << addr2Index.size() << endl;
     for(its = addr2Index.begin(); its != addr2Index.end(); ++its)
         index.push_back(its->second);
     for(vector<int>::iterator p = index.begin(); p != index.end(); p++)
