@@ -40,7 +40,7 @@ void freeList::setIndex()
     int k = 0;
     while(1)
     {
-        if(elementSize*(k+1) < 4096)
+        if(elementSize*(k+1) <= 4096)
             offset.push_back((numOfblocks-1)*4096 + elementSize*k);
         else
             break;
@@ -114,13 +114,13 @@ vector<void*> recorder::selectWhereNoIndex(string& tableName, conditionJudge& ju
     return vec;
 }
 
-vector<void*> recorder::selectWhereIndex(string& tableName, vector<long> offset, conditionJudge& judger)
+vector<void*> recorder::selectWhereIndex(string& tableName, vector<int> offset, conditionJudge& judger)
 {
     int index = table2Freelist[tableName];
     vector<void*> vec;
     freeList* fp = freeListVector[index];
     int numBlocks = fp->numOfblocks;
-    vector<long>::iterator p;
+    vector<int>::iterator p;
     for(p = offset.begin(); p != offset.end(); p++)
     {
         int idx = bm->getIndex(tableName, *p);
@@ -151,7 +151,7 @@ bool recorder::updateWhere(string& tableName, long offset, void* data)
 }
 
 
-vector<void*> recorder::selectNoWhere(string& tableName, vector<long>* addr)
+vector<void*> recorder::selectNoWhere(string& tableName, vector<int>* addr)
 {
     
     int index = table2Freelist[tableName];
@@ -197,10 +197,20 @@ bool recorder::dropTable(string& tableName)
         }
     }
     flp->numOfblocks = -1;
-    delete flp;
+    
     table2Freelist.erase(tableName);
     freelist2Table.erase(index);
-    freeListVector.erase(freeListVector.begin() + index);
+    vector<freeList *>::iterator fp = freeListVector.begin();
+    for(;fp != freeListVector.end(); fp++)
+    {
+        if(*fp == flp)
+        {
+            freeListVector.erase(fp);
+            break;
+        }
+    }
+    remove(tableName.c_str());
+    delete flp;
     return true;
 }
 
@@ -613,6 +623,3 @@ bool conditionJudge::isSatisfied(void * pt)
     }
     return true;
 }
-
-
-

@@ -8,11 +8,12 @@
 
 #include "auxiliary.hpp"
 #include "recorder.hpp"
-#include "indexManager.hpp"
+//#include "indexManager.hpp"
 #include "catalog_manager.h"
+#include "b_plus_tree.h"
 string tmp = "/Users/jason/Desktop/data";
 recorder rm(tmp);
-IndexManager im;
+IndexManager im(&rm);
 CatalogManager cm;
 
 //-------------create table---------

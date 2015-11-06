@@ -7,6 +7,7 @@
 
 #include "interpreter.hpp"
 #include "recorder.hpp"
+#include <fstream>
 extern recorder rm;
 //read word: 1.create table 2.XX ( 3. name type (size), , , );
 //           1.drop table 2.xx ;
@@ -253,7 +254,7 @@ AUXCreateTable* Interpreter::dealCreateTable(AUX* sentence)
     for (i = 0; i < uniques.size(); i++) {
         for(j = 0; j < attrs.size(); j++)
         {
-            if(attrs[i] == uniques[j])
+            if(attrs[j] == uniques[i])
                 break;
         }
         if(j == attrs.size())

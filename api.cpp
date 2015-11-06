@@ -20,49 +20,49 @@ void API::chooseCommand(AUX* command)
     {
         isSucceed = false;
         //information = "there is an error in the command!";
-        cout<<command->getInformation();
+        cout<<"NOT VALID!!!"<<endl;
     }
     else if(type == "create table")
     {
         AUXCreateTable* cast_command = static_cast<AUXCreateTable*>(command);
         createTable(cast_command);
-        cout<<cast_command->getInformation();
+        cout<<cast_command->getInformation()<<endl;
     }
     else if(type == "drop table")
     {
         AUXDropTable* cast_command = static_cast<AUXDropTable*>(command);
         dropTable(cast_command);
-        cout<<cast_command->getInformation();
+        cout<<cast_command->getInformation()<<endl;
     }
     else if(type == "create index")
     {
         AUXCreateIndex* cast_command = static_cast<AUXCreateIndex*>(command);
         createIndex(cast_command);
-        cout<<cast_command->getInformation();
+        cout<<cast_command->getInformation()<<endl;
     }
     else if(type == "drop index")
     {
         AUXDropIndex* cast_command = static_cast<AUXDropIndex*>(command);
         dropIndex(cast_command);
-        cout<<cast_command->getInformation();
+        cout<<cast_command->getInformation()<<endl;
     }
     else if(type == "insert into")
     {
         AUXInsertInto* cast_command = static_cast<AUXInsertInto*>(command);
         InsertInto(cast_command);
-        cout<<cast_command->getInformation();
+        cout<<cast_command->getInformation()<<endl;
     }
     else if(type == "delete from")
     {
         AUXDeleteFrom* cast_command = static_cast<AUXDeleteFrom*>(command);
         deleteFrom(cast_command);
-        cout<<cast_command->getInformation();
+        cout<<cast_command->getInformation()<<endl;
     }
     else if(type == "select from")
     {
         AUXSelectFrom* cast_command = static_cast<AUXSelectFrom*>(command);
         selectFrom(cast_command);
-        cout<<cast_command->getInformation();
+        cout<<cast_command->getInformation()<<endl;
     }
     
 }
@@ -96,7 +96,7 @@ void API::setSucceed(bool success)
  */
 
 
-void API::createTable(AUXCreateTable* cast_command)  //finish
+void API::createTable(AUXCreateTable* cast_command)  //done
 {
     TableInfo table_info;
     AttrInfo attr_info;
@@ -104,6 +104,7 @@ void API::createTable(AUXCreateTable* cast_command)  //finish
     string primary_key = cast_command->getPrimaryKey();
     vector<string>uniques = cast_command->getUniqueKeys();
     string tmpFileAddr = file_addr + table_name;
+
     //recorder rm(file_addr);
     
     //@@@@@@@hastable, mind this function..
@@ -121,18 +122,30 @@ void API::createTable(AUXCreateTable* cast_command)  //finish
     vector<string>::iterator newIt;
     map<string, int>::iterator itLen;
     short element_size = 0;
+    string tmpIndexName;
     for (newIt = attr_order.begin() /*it = attrs.begin(),itLen = attrs_length.begin()*/; newIt != attr_order.end();newIt++ /*it++,itLen++*/) {
         it = attrs.find(newIt->data());
         itLen = attrs_length.find(newIt->data());
         
         attr_info.setName(it->first);
-        attr_info.setTypeId((it->second == "int")?0:(it->second == "float")?1:(it->second == "char")?2:99);
+        int tmp_type = (it->second == "int")?0:(it->second == "float")?1:(it->second == "char")?2:99;
+        attr_info.setTypeId(tmp_type);
         element_size+=itLen->second;
         attr_info.setStrLen(itLen->second);
+        attr_info.setHasIndex(false);
+        attr_info.setIsPrimaryKey(false);
+        attr_info.setIsUnique(false);
+
         //is primary key
         if(it->first == primary_key)
         {
             attr_info.setIsPrimaryKey(true);
+            attr_info.setIsUnique(true);
+            tmpIndexName = tmpFileAddr + "_" + primary_key + ".index";
+            //$$$create index on this table
+            //im.createIndex(tmpIndexName, tmp_type, itLen->second);
+            attr_info.setHasIndex(true);
+            
         }
         //is unique
         for(int i = 0; i < uniques.size(); i++)
@@ -147,15 +160,20 @@ void API::createTable(AUXCreateTable* cast_command)  //finish
         table_info.addAttr(it->first, attr_info);
     }
     cm.createTableInfo(table_info);
+    
+    im.createIndex(tmpIndexName);
     rm.createTable(tmpFileAddr, element_size);
+    
+    
 }
 
 
-void API::dropTable(AUXDropTable* cast_command)
+void API::dropTable(AUXDropTable* cast_command)  //done
 {
     TableInfo table_info;
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
+    string tmpFileAddr = file_addr + table_name;
     
     //table exists? if not, return
     if(!cm.hasTable(table_name))
@@ -172,19 +190,29 @@ void API::dropTable(AUXDropTable* cast_command)
     if(!indexes.empty())
     {
         //@@@@@@drop index!
+        for(int i = 0; i < indexes.size(); i++)
+        {
+            string tmpIndexName = tmpFileAddr + "_" + indexes[i] + ".index";
+            im.dropIndex(tmpIndexName);
+        }
+        
     }
     //@@@@@@drop table, if success, return. failed, return..
     
+    cm.dropTableInfo(tmpFileAddr);
+    rm.dropTable(tmpFileAddr);
 }
 
 
-void API::createIndex(AUXCreateIndex* cast_command)
+void API::createIndex(AUXCreateIndex* cast_command)  //done
 {
     TableInfo table_info;
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
     string index_name = cast_command->getIndexName();
     string attr_name = cast_command->getAttributeName();
+    string tmpFileAddr = file_addr + table_name;
+    string tmpIndexName = tmpFileAddr + "_" + index_name + ".index";
 
     //table exists? if not , return
     if(!cm.hasTable(table_name))
@@ -223,6 +251,57 @@ void API::createIndex(AUXCreateIndex* cast_command)
         return;
     }
     //@@@@@@create index and add records..
+    table_info.getAttr(attr_name).setHasIndex(true);
+    im.createIndex(tmpIndexName);
+    vector<int> AttrAddr;
+    AttrType attr_value;
+    map<AttrType, int> datalist;
+    vector<string> attrNames = table_info.getAttrNames();
+    //string& tableName, vector<long>* addr = NULL
+    vector<void*> result = rm.selectNoWhere(tmpFileAddr, &AttrAddr);
+    int thisType = attrs.find(attr_name)->second.getTypeId();
+    
+    //the values
+    int k = 0;
+    for(int j = 0; j < result.size(); j++)
+    {
+        int size = 0;
+        for(int i = 0; i < attrs.size(); i++)
+        {
+            int type = table_info.getAttr(attrNames[i]).getTypeId();
+            if(type == thisType) //int
+            {
+                //cout<<*(int*)((char*)result[j]+size)<<"\t";
+                attr_value = AttrType(*(int*)((char*)result[j]+size));
+                datalist[attr_value] = AttrAddr[k++];
+                size += 4;
+                
+            }
+            else if(type == thisType) //float
+            {
+                //cout<<*(float*)((char *)result[j]+size)<<"\t";
+                attr_value = AttrType(*(float*)((char*)result[j]+size));
+                datalist[attr_value] = AttrAddr[k++];
+                size += 4;
+            }
+            else if(type == thisType)
+            {
+                int temp = table_info.getAttr(attrNames[i]).getStrLen();
+                //cout<<setw(temp) <<(char*)result[j]+size<<"\t";
+                
+                attr_value = AttrType(*(char*)((char*)result[j]+size));
+                datalist[attr_value] = AttrAddr[k];
+                k+=temp;
+
+                size += temp;
+            }
+        }
+        cout<<endl;
+    }
+
+    
+    im.insertIntoIndex(datalist);
+    cm.writeTableInfo(table_info);
     
     //needs im.addrecord and cm.addindex..
 }
@@ -234,6 +313,8 @@ void API::dropIndex(AUXDropIndex* cast_command)
     AttrInfo attr_info;
     string table_name = cast_command->getTableName();
     string index_name = cast_command->getIndexName();
+    string tmpFileAddr = file_addr + table_name;
+    string tmpIndexName = tmpFileAddr + "_" + index_name + ".index";
     
     //table exists? if not , return
     if(!cm.hasTable(table_name))
@@ -266,7 +347,14 @@ void API::dropIndex(AUXDropIndex* cast_command)
         return;
     }
     //drop index and updata table info..
-    
+    im.dropIndex(tmpIndexName);
+    for(int i = 0; i < table_info.getAttrNames().size(); i++)
+    {
+        //if(table_info.getAttr(table_info.getAttrNames()[i]))
+    }
+    cm.writeTableInfo(table_info);
+    //cm??
+    //im.dropIndex(tmpFileAddr); ?
 }
 
 
@@ -390,7 +478,20 @@ void API::InsertInto(AUXInsertInto* cast_command)  //finish
         //use recorder..
     //insert and update index..
     string tmpFileAddr = file_addr + table_name;
-    long offset = rm.insert(dt, tmpFileAddr);
+    int offset = (int)rm.insert(dt, tmpFileAddr);
+    map<AttrType, int> datalist;
+    AttrType attr_value;
+    for(int i = 0; i < table_info.getAttrNames().size(); i++)
+    {
+        if(table_info.getAttr(table_info.getAttrNames()[i]).getHasIndex())
+        {
+            datalist[table_info.getAttrNames()[i]] = offset;
+        }
+    }
+    im.insertIntoIndex(datalist);
+
+    //get the datalist...from recorder..
+    //im.insertIntoIndex(datalist);
 }
 
 
@@ -496,9 +597,14 @@ void API::selectFrom(AUXSelectFrom* cast_command)
             cout<<endl;
         }
     }
+    //has nor no index..
     else{
         vector<WhereForRecorder>* cond = new vector<WhereForRecorder>;
+        //vector<WhereForRecorder>* condNoIndex = new vector<WhereForRecorder>;
+        //vector<WhereForRecorder>* condWithIndex = new vector<WhereForRecorder>;
         WhereForRecorder tmp;
+        bool index_flag = true;
+        vector<void*> result;
         /*
          int type;
          string op;
@@ -533,6 +639,16 @@ void API::selectFrom(AUXSelectFrom* cast_command)
             }
             tmp.offset = tmp_offset;
             tmp.length = table_info.getAttr(where[i].attribute).getStrLen();
+            if(!table_info.getAttr(attribute_name).getHasIndex())
+            {
+                //condWithIndex->push_back(tmp);
+                index_flag = false;
+            }
+//            else
+//            {
+//                condNoIndex->push_back(tmp);
+//                index_flag = false;
+//            }
             cond->push_back(tmp);
         }
         int element_size = 0;
@@ -540,8 +656,81 @@ void API::selectFrom(AUXSelectFrom* cast_command)
         {
             element_size+=table_info.getAllAttrs()[table_info.getAttrNames()[i]].getStrLen();
         }
-        conditionJudge jd(cond, element_size);
-        vector<void*> result = rm.selectWhereNoIndex(tmpFileAddr, jd);
+//        conditionJudge jdNoIndex(condNoIndex, element_size);
+//        conditionJudge jdWithIndex(condWithIndex, element_size);
+//        vector<void*> result = rm.selectWhereNoIndex(tmpFileAddr, jdNoIndex);
+        if(!index_flag|| where.size() > 1)
+        {
+            conditionJudge jd(cond, element_size);
+            result = rm.selectWhereNoIndex(tmpFileAddr, jd);
+        }
+        else{
+            vector<int> offset;
+            //std::vector<int> findLeft(const AttrType &k);
+            //std::vector<int> findInIndex(std::vector<AttrType> datalist)
+            int type = cond->operator[](0).type;
+            vector<AttrType> datalist;
+            
+            
+            AttrType attr_value;
+            if(type == 0)
+            {
+                AttrType attr_value(stoi(cond->operator[](0).value));
+            }
+            else if(type == 1)
+            {
+                AttrType attr_value(stof(cond->operator[](0).value));
+            }
+            else if(type == 2)
+            {
+                AttrType attr_value(cond->operator[](0).value);
+            }
+            
+            datalist.push_back(attr_value);
+            if(cond->operator[](0).op == "=")
+            {
+                offset = im.findInIndex(datalist);
+                conditionJudge jd(cond, element_size);
+                result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+                //rm.selectWhereNoIndex(tmpFileAddr, jd);
+            }
+            else if (cond->operator[](0).op == ">")
+            {
+                offset = im.btree.findRight(attr_value);
+                conditionJudge jd(cond, element_size);
+                result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+            }
+            else if (cond->operator[](0).op == "<")
+            {
+                offset = im.btree.findLeft(attr_value);
+                conditionJudge jd(cond, element_size);
+                result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+
+            }
+            else if (cond->operator[](0).op == ">=")
+            {
+                offset = im.btree.findRight(attr_value);
+                conditionJudge jd(cond, element_size);
+                result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+
+            }
+            else if (cond->operator[](0).op == "<=")
+            {
+                offset = im.btree.findLeft(attr_value);
+                conditionJudge jd(cond, element_size);
+                result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+            }
+            else if (cond->operator[](0).op == "!=")
+            {
+                conditionJudge jd(cond, element_size);
+                result = rm.selectWhereNoIndex(tmpFileAddr, jd);
+            }
+            
+        }
+        
+        
+        //vector<void*> resultWithIndex = rm.selectWhereIndex(tmpFileAddr, offset.., jdWithIndex);
+        //do the intersection...
         //cout << "Result Size is: " <<  result.size() << "\n";
         cout<<"++++++++++++++++++++++++++"<<endl;
         for(int i = 0; i < attrs.size(); i++)
@@ -550,6 +739,8 @@ void API::selectFrom(AUXSelectFrom* cast_command)
         }
         cout<<endl;
         cout<<"++++++++++++++++++++++++++"<<endl;
+        
+        
         for(int j = 0; j < result.size(); j++)
         {
             int size = 0;
@@ -618,14 +809,25 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
     }
     //do the deleting
     string tmpFileAddr = file_addr + table_name;
+    //string tmpIndexName = tmpFileAddr + "_" + index_name + ".index";
     if (cast_command->getIsDeleteAll()) {
         //delete in recorder
         rm.deleteNoWhere(tmpFileAddr);
         //update index
+        for (int i = 0; i < table_info.getAttrNames().size(); i++) {
+            if(table_info.getAttr(table_info.getAttrNames()[i]).getHasIndex() == true)
+            {
+                string tmpIndexName = tmpFileAddr + "_" + table_info.getAttr(table_info.getAttrNames()[i]).getName() + ".index";
+                im.dropIndex(tmpIndexName);
+            }
+        }
     }
+    //with index, without index..
     else{
-        vector<WhereForRecorder>* cond = new vector<WhereForRecorder>;
+        vector<WhereForRecorder>* condNoIndex = new vector<WhereForRecorder>;
+        //vector<WhereForRecorder>* condWithIndex = new vector<WhereForRecorder>;
         WhereForRecorder tmp;
+        bool index_flag = true;
         /*
          int type;
          string op;
@@ -660,25 +862,116 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
             }
             tmp.offset = tmp_offset;
             tmp.length = table_info.getAttr(where[i].attribute).getStrLen();
-            cond->push_back(tmp);
+            if(!table_info.getAttr(attribute_name).getHasIndex())
+            {
+                index_flag = false;
+                //condWithIndex->push_back(tmp);
+            }
+//            else
+//            {
+                condNoIndex->push_back(tmp);
+            //}
+
+            //condNoIndex->push_back(tmp);
         }
         int element_size = 0;
         for(int i = 0; i < table_info.getAttrNames().size(); i++)
         {
             element_size+=table_info.getAllAttrs()[table_info.getAttrNames()[i]].getStrLen();
         }
-        conditionJudge jd(cond, element_size);
-        if(!rm.deleteWhereNoIndex(tmpFileAddr, jd))
+        //conditionJudge jd(condNoIndex, element_size);
+        conditionJudge jdNoIndex(condNoIndex, element_size);
+        //conditionJudge jdWithIndex(condWithIndex, element_size);
+        if(!index_flag|| where.size() > 1)
         {
-            setSucceed(false);
-            cast_command->setInformation("delete failed!!!!!");
-            return;
+            if(!rm.deleteWhereNoIndex(tmpFileAddr, jdNoIndex))
+            {
+                setSucceed(false);
+                cast_command->setInformation("delete failed!!!!!");
+                return;
+            }
+            else{
+                cout<<"Success!"<<endl;
+            }
         }
+        //with one condition and has index
         else{
-            cout<<"Success!"<<endl;
+            vector<int> offset;
+            //std::vector<int> findLeft(const AttrType &k);
+            //std::vector<int> findInIndex(std::vector<AttrType> datalist)
+            int type = condNoIndex->operator[](0).type;
+            vector<AttrType> datalist;
+            
+            
+            AttrType attr_value;
+            if(type == 0)
+            {
+                AttrType attr_value(stoi(condNoIndex->operator[](0).value));
+            }
+            else if(type == 1)
+            {
+                AttrType attr_value(stof(condNoIndex->operator[](0).value));
+            }
+            else if(type == 2)
+            {
+                AttrType attr_value(condNoIndex->operator[](0).value);
+            }
+            
+            datalist.push_back(attr_value);
+            if(condNoIndex->operator[](0).op == "=")
+            {
+                offset = im.findInIndex(datalist);
+                conditionJudge jd(condNoIndex, element_size);
+                for(int j = 0; j < offset.size(); j++)
+                    rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
+                //result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+                //rm.selectWhereNoIndex(tmpFileAddr, jd);
+            }
+            else if (condNoIndex->operator[](0).op == ">")
+            {
+                offset = im.btree.findRight(attr_value);
+                conditionJudge jd(condNoIndex, element_size);
+                for(int j = 0; j < offset.size(); j++)
+                    rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
+            }
+            else if (condNoIndex->operator[](0).op == "<")
+            {
+                offset = im.btree.findLeft(attr_value);
+                conditionJudge jd(condNoIndex, element_size);
+                for(int j = 0; j < offset.size(); j++)
+                    rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
+                //result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+                
+            }
+            else if (condNoIndex->operator[](0).op == ">=")
+            {
+                offset = im.btree.findRight(attr_value);
+                conditionJudge jd(condNoIndex, element_size);
+                for(int j = 0; j < offset.size(); j++)
+                    rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
+                //result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+                
+            }
+            else if (condNoIndex->operator[](0).op == "<=")
+            {
+                offset = im.btree.findLeft(attr_value);
+                conditionJudge jd(condNoIndex, element_size);
+                for(int j = 0; j < offset.size(); j++)
+                    rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
+                //result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
+            }
+            else if (condNoIndex->operator[](0).op == "!=")
+            {
+                conditionJudge jd(condNoIndex, element_size);
+                rm.deleteWhereNoIndex(tmpFileAddr, jdNoIndex);
+                //result = rm.selectWhereNoIndex(tmpFileAddr, jd);
+            }
+            
         }
-    }
+
+        }
+
     //has index
     //has no index..
     //update index..
-}
+    }

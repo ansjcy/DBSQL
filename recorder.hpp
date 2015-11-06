@@ -85,8 +85,8 @@ public:
     
     long insert(void* data, string& tableName);
     bool dropTable(string& tableName);
-    vector<void*> selectNoWhere(string& tableName, vector<long>* addr = NULL);
-    vector<void*> selectWhereIndex(string& tableName, vector<long> offset, conditionJudge& judger);
+    vector<void*> selectNoWhere(string& tableName, vector<int>* addr = NULL);
+    vector<void*> selectWhereIndex(string& tableName, vector<int> offset, conditionJudge& judger);
     vector<void*> selectWhereNoIndex(string& tableName, conditionJudge& judger);
 };
 
