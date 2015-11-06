@@ -21,6 +21,8 @@ extern recorder rm;
 AUX* Interpreter::dealInput()
 {
     AUX* sentence = getInput();
+    if(sentence->getType() == "exec")
+        sentence =  getInputExec();
     if(sentence->getType() == "create table")
         return dealCreateTable(sentence);
     else if(sentence->getType() == "drop table")
@@ -47,6 +49,81 @@ AUX* Interpreter::getInput()
     getline(cin, norm);
     norm = normalize(norm);
     //"create table haha ( dep char ( 20 ) , primary key ( dep ) , unique ( dep ) ) ; "	
+    stringstream sin(norm);
+    string command(""), command2(""), content("");
+    sin>>command;
+    AUX *sentence = new AUX();
+    if(command == "exec"||command == "exec;")
+    {
+        sentence->setType("exec");
+        return sentence;
+    }
+    //quit SQL
+    if(command == "quit;"||command =="quit"){
+        sentence->quit = true;
+    }
+    else
+    {
+        sentence->quit = false;
+    }
+    //the first word cannot be the end..
+    if(command.back()==';')
+    {
+        sentence->setType("not valid");
+        return sentence;
+    }
+    if(command == "select")
+    {
+        sentence->setType("select from");
+    }
+    else if(command == "create"||command == "drop"||command == "insert"||command == "delete")
+    {
+        sin>>command2;
+        if(command == "create"||command == "drop"){
+            if(command2 != "table" && command2!="index")
+            {
+                sentence->setType("not valid");
+                return sentence;
+            }
+        }
+        else if(command == "insert"&&command2 != "into")
+        {
+            sentence->setType("not valid");
+            return sentence;
+        }
+        else if (command == "delete"&&command2 != "from")
+        {
+            sentence->setType("not valid");
+            return sentence;
+        }
+        sentence->setType(command + " " +command2);
+    }
+    //not a command
+    else{
+        sentence->setType("not valid");
+        return sentence;
+    }
+    string contentTmp;
+    while (true) {
+        sin>>contentTmp;
+        content = content + " " + contentTmp;
+        if(contentTmp == ";")
+        {
+            break;
+        }
+    }
+    sentence->setContent(content);
+    return sentence;
+}
+
+
+AUX* Interpreter::getInputExec()
+{
+    string norm;
+    freopen("/Users/jason/Desktop/file", "r", stdin);
+    getline(cin, norm);
+    norm = normalize(norm);
+    //"create table haha ( dep char ( 20 ) , primary key ( dep ) , unique ( dep ) ) ; "
     stringstream sin(norm);
     string command(""), command2(""), content("");
     sin>>command;
@@ -108,6 +185,7 @@ AUX* Interpreter::getInput()
     sentence->setContent(content);
     return sentence;
 }
+
 /*
  content: XX ( 3. name type (size), , , );
  test: create table haha ( dep char ( 20 ) , age int, aggge float(10), primary key ( dep ) , unique ( dep ) ) ;

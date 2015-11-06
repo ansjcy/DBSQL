@@ -175,7 +175,7 @@ int Node::getP(int i) { return P[i]; }
 
 void Node::insert(const AttrType &k, int p, int i) {
     
-    if( i < K.size() - 1 ) {
+    if( i < K.size() ) {
         K.insert(K.begin()+i, k);
         P.insert(P.begin()+i, p);
     } else {
@@ -476,7 +476,10 @@ int BPlusTree::find(const AttrType &k) {
     
     
     for(int i = 0; i < node.getKSize(); i++ ) {
+        std::cout << "find: " << i << std::endl;
         if( node.getK(i) == k ) {
+            std::cout << "getk " << node.getK(i).datai << std::endl;
+            std::cout << "getP " << node.getP(i) <<std::endl;
             return node.getP(i);
         }
     }
@@ -500,7 +503,7 @@ void BPlusTree::insert(const AttrType &k, int p) {
     if( !node.getKSize() ) {
         node.appendK(k);
         node.appendP(p);
-        node.appendP(0); // has problem here
+        node.appendP(-1); // has problem here
     } else {
         for( i = 0; i < node.getKSize(); i++ ) {
             
@@ -613,9 +616,6 @@ std::vector<int> BPlusTree::findRight(const AttrType &k) {
         for( int i = 0; i < node.getKSize(); i++ ) {
             if( node.getK(i) > k ) {
                 rst.push_back(node.getP(i));
-            }
-            else {
-                return rst;
             }
         }
         pos = node.getP(node.getPSize() - 1);

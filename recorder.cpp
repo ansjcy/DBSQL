@@ -1,6 +1,6 @@
 #include "bufferManager.hpp"
 #include "recorder.hpp"
-
+#include <math.h>
 bool isAllZero(char * p, int num)
 {
     char * sp = (char*)p;
@@ -10,6 +10,13 @@ bool isAllZero(char * p, int num)
             return false;
     }
     return true;
+}
+
+int min(int a, int b)
+{
+    if(a < b)
+        return a;
+    return b;
 }
 
 bufferManager * bm = new bufferManager();
@@ -143,13 +150,23 @@ vector<void*> recorder::selectWhereIndex(string& tableName, vector<int> offset, 
 bool recorder::updateWhere(string& tableName, long offset, void* data)
 {
     fstream file;
-    file.open(tableName, ofstream::out);
-    file.seekg(offset, ios::beg);
-    file.write((char*)data, BUFFERSIZE_LIMIT);
-    file.close();
-    return true;
+    int index = bm->getIndex(tableName, offset);
+    
+    
+    if(index == -1)
+    {
+        file.open(tableName, ofstream::out);
+        file.seekg(offset, ios::beg);
+        file.write((char*)data, BUFFERSIZE_LIMIT);
+        file.close();
+        return true;
+    }
+    else
+    {
+        bm->storeData(index, data, offset, BUFFERSIZE_LIMIT);
+        return true;
+    }
 }
-
 
 vector<void*> recorder::selectNoWhere(string& tableName, vector<int>* addr)
 {
@@ -228,7 +245,7 @@ long recorder::insert(void* data, string& tableName)
         fp->setIndex();
     //cout << "step 2\n";
     offset = fp->getNext();
-    //cout << "Get offset: " << offset << endl;
+    cout << "Get offset: " << offset << endl;
     index = bm->getIndex(tableName, offset);
     if(index == -1)
     {
@@ -236,6 +253,7 @@ long recorder::insert(void* data, string& tableName)
         //cout << "Malloc a new Buffer at " << index << "\n";
         bm->readData(tableName, offset, index);
     }
+   // cout << offset << endl;
     bm->storeData(index, data, offset, fp->elementSize);
     return offset;
 }
@@ -251,6 +269,7 @@ bool recorder::deleteWhereIndex(string& tableName, long offset, conditionJudge& 
     num = fp->numOfblocks;
     eachSize = fp->elementSize;
     //int index = bm->mallocBuffer();
+    cout << "Index " << tableName << "  " << offset << endl;
     int index = bm->getIndex(tableName, offset);
     if(index == -1)
     {
@@ -280,7 +299,9 @@ bool recorder::deleteWhereNoIndex(string& tableName, conditionJudge& judger)
     eachSize = fp->elementSize;
     for(int i = 0; i < num; i++)
     {
-        int index = bm->mallocBuffer();
+        int index = bm->getIndex(tableName, i*BUFFERSIZE_LIMIT);
+        if(index == -1)
+            index = bm->mallocBuffer();
         bm->readData(tableName, i*BUFFERSIZE_LIMIT, index);
         for(int j = 0; (j+1)*eachSize < 4096; j++)
         {
@@ -418,7 +439,7 @@ bool isIntEqual(int * v1, string& op, string& value)
         if(value.find(".") != string::npos)
             return *v1 > std::stoi(value);
         else
-            return *v1 < std::stof(value);
+            return *v1 > std::stof(value);
     }
     else if(op == "=")
     {
@@ -465,7 +486,7 @@ bool isFloatEqual(float* v1, string& op, string& value)
         if(value.find(".") != string::npos)
             return *v1 > std::stoi(value);
         else
-            return *v1 < std::stof(value);
+            return *v1 > std::stof(value);
     }
     else if(op == "=")
     {
@@ -500,9 +521,11 @@ bool isFloatEqual(float* v1, string& op, string& value)
 
 bool isCharEqual(char* src, string& op, string& value,int len)
 {
+    int fuck__ = strlen(src);
+    fuck__ = min(fuck__, value.length());
     if(op == "<")
     {
-        for(int i = 0; i < value.length(); i++)
+        for(int i = 0; i < fuck__; i++)
         {
             if(src[i] >= value.at(i))
                 return false;
@@ -510,7 +533,7 @@ bool isCharEqual(char* src, string& op, string& value,int len)
     }
     else if(op == ">")
     {
-        for(int i = 0; i < value.length(); i++)
+        for(int i = 0; i < fuck__; i++)
         {
             if(src[i] <= value.at(i))
                 return false;
@@ -518,7 +541,7 @@ bool isCharEqual(char* src, string& op, string& value,int len)
     }
     else if(op == "=")
     {
-        for(int i = 0; i < value.length(); i++)
+        for(int i = 0; i < fuck__ ; i++)
         {
             //cout << "Compare: " << src[i] << " " << value.at(i) << endl;
             if(src[i] != value.at(i))
@@ -527,7 +550,7 @@ bool isCharEqual(char* src, string& op, string& value,int len)
     }
     else if(op == "<=")
     {
-        for(int i = 0; i < value.length(); i++)
+        for(int i = 0; i < fuck__; i++)
         {
             if(src[i] > value.at(i))
                 return false;
@@ -535,7 +558,7 @@ bool isCharEqual(char* src, string& op, string& value,int len)
     }
     else if(op == ">=")
     {
-        for(int i = 0; i < value.length(); i++)
+        for(int i = 0; i < fuck__; i++)
         {
             if(src[i] < value.at(i))
                 return false;
@@ -543,7 +566,7 @@ bool isCharEqual(char* src, string& op, string& value,int len)
     }
     else if(op == "!=")
     {
-        for(int i = 0; i < value.length(); i++)
+        for(int i = 0; i < fuck__; i++)
         {
             if(src[i] == value.at(i))
                 return false;

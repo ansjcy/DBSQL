@@ -212,7 +212,7 @@ void API::createIndex(AUXCreateIndex* cast_command)  //done
     string index_name = cast_command->getIndexName();
     string attr_name = cast_command->getAttributeName();
     string tmpFileAddr = file_addr + table_name;
-    string tmpIndexName = tmpFileAddr + "_" + index_name + ".index";
+    string tmpIndexName = tmpFileAddr + "_" + attr_name + ".index";
 
     //table exists? if not , return
     if(!cm.hasTable(table_name))
@@ -307,7 +307,7 @@ void API::createIndex(AUXCreateIndex* cast_command)  //done
 }
 
 
-void API::dropIndex(AUXDropIndex* cast_command)
+void API::dropIndex(AUXDropIndex* cast_command)   //done
 {
     TableInfo table_info;
     AttrInfo attr_info;
@@ -358,7 +358,7 @@ void API::dropIndex(AUXDropIndex* cast_command)
 }
 
 
-void API::InsertInto(AUXInsertInto* cast_command)  //finish
+void API::InsertInto(AUXInsertInto* cast_command)  //done
 {
     TableInfo table_info;
     AttrInfo attr_info;
@@ -481,11 +481,27 @@ void API::InsertInto(AUXInsertInto* cast_command)  //finish
     int offset = (int)rm.insert(dt, tmpFileAddr);
     map<AttrType, int> datalist;
     AttrType attr_value;
-    for(int i = 0; i < table_info.getAttrNames().size(); i++)
+    //attrs and values
+    for(int i = 0; i < attrs.size(); i++)
     {
-        if(table_info.getAttr(table_info.getAttrNames()[i]).getHasIndex())
+        if(table_info.getAttr(attrs[i]).getHasIndex())
         {
-            datalist[table_info.getAttrNames()[i]] = offset;
+            int type = table_info.getAttr(attrs[i]).getTypeId();
+            attr_value.typeId = type;
+            if(type == 0)
+            {
+                attr_value.datai = stoi(values[i]);
+            }
+            if(type == 1)
+            {
+                attr_value.dataf = stof(values[i]);
+            }
+            if(type == 2)
+            {
+                attr_value.datas = values[i];
+            }
+            
+            datalist[AttrType(attr_value)] = offset;
         }
     }
     im.insertIntoIndex(datalist);
@@ -670,20 +686,25 @@ void API::selectFrom(AUXSelectFrom* cast_command)
             //std::vector<int> findInIndex(std::vector<AttrType> datalist)
             int type = cond->operator[](0).type;
             vector<AttrType> datalist;
+            string tmpFileAddr = file_addr + table_name;
             
+            string attr_name = where[0].attribute;
+            string tmpIndexName = tmpFileAddr + "_" + attr_name + ".index";
+            int rootPos = table_info.getAttr(attr_name).indexRootOffset;
+            im.getIndex(tmpIndexName, rootPos);
             
             AttrType attr_value;
             if(type == 0)
             {
-                AttrType attr_value(stoi(cond->operator[](0).value));
+                attr_value = AttrType(stoi(cond->operator[](0).value));
             }
             else if(type == 1)
             {
-                AttrType attr_value(stof(cond->operator[](0).value));
+                attr_value = AttrType(stof(cond->operator[](0).value));
             }
             else if(type == 2)
             {
-                AttrType attr_value(cond->operator[](0).value);
+                attr_value = AttrType(cond->operator[](0).value);
             }
             
             datalist.push_back(attr_value);
@@ -902,22 +923,27 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
             int type = condNoIndex->operator[](0).type;
             vector<AttrType> datalist;
             
+            string attr_name = where[0].attribute;
+            string tmpIndexName = tmpFileAddr + "_" + attr_name + ".index";
+            int rootPos = table_info.getAttr(attr_name).indexRootOffset;
+            im.getIndex(tmpIndexName, rootPos);
             
             AttrType attr_value;
             if(type == 0)
             {
-                AttrType attr_value(stoi(condNoIndex->operator[](0).value));
+                attr_value = AttrType(stoi(condNoIndex->operator[](0).value));
             }
             else if(type == 1)
             {
-                AttrType attr_value(stof(condNoIndex->operator[](0).value));
+                attr_value = AttrType(stof(condNoIndex->operator[](0).value));
             }
             else if(type == 2)
             {
-                AttrType attr_value(condNoIndex->operator[](0).value);
+                attr_value = AttrType(condNoIndex->operator[](0).value);
             }
             
             datalist.push_back(attr_value);
+            conditionJudge jd;
             if(condNoIndex->operator[](0).op == "=")
             {
                 offset = im.findInIndex(datalist);
@@ -930,14 +956,14 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
             else if (condNoIndex->operator[](0).op == ">")
             {
                 offset = im.btree.findRight(attr_value);
-                conditionJudge jd(condNoIndex, element_size);
+                jd = conditionJudge(condNoIndex, element_size);
                 for(int j = 0; j < offset.size(); j++)
                     rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
             }
             else if (condNoIndex->operator[](0).op == "<")
             {
                 offset = im.btree.findLeft(attr_value);
-                conditionJudge jd(condNoIndex, element_size);
+                jd = conditionJudge(condNoIndex, element_size);
                 for(int j = 0; j < offset.size(); j++)
                     rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
                 //result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
@@ -946,7 +972,7 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
             else if (condNoIndex->operator[](0).op == ">=")
             {
                 offset = im.btree.findRight(attr_value);
-                conditionJudge jd(condNoIndex, element_size);
+                jd = conditionJudge(condNoIndex, element_size);
                 for(int j = 0; j < offset.size(); j++)
                     rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
                 //result = rm.selectWhereIndex(tmpFileAddr, offset, jd);
@@ -955,7 +981,7 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
             else if (condNoIndex->operator[](0).op == "<=")
             {
                 offset = im.btree.findLeft(attr_value);
-                conditionJudge jd(condNoIndex, element_size);
+               jd = conditionJudge(condNoIndex, element_size);
                 for(int j = 0; j < offset.size(); j++)
                     rm.deleteWhereIndex(tmpFileAddr, offset[j], jd);
                 //result = rm.selectWhereIndex(tmpFileAddr, offset, jd);

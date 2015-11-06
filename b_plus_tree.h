@@ -219,6 +219,8 @@ public:
     
     IndexManager(recorder* r) {
         bufferManager.setRecorder(r);
+        btree.filename = "_";
+        btree.rootPos = -1;
         
     }
     
@@ -248,6 +250,10 @@ public:
     int getIndex(std::string filename, int rootPos, int typeId = 0, int strLen = 0){
         recorder* r;
         r = bufferManager.getRecorder();
+        
+        if( btree.filename == filename && btree.rootPos == rootPos )
+            return rootPos;
+        
         
         this->filename = filename;
         btree.setBufferManager(&bufferManager);

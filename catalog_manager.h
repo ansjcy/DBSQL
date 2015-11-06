@@ -105,9 +105,6 @@ public:
         return indexes;
     }
     
-    std::map<std::string, std::string> indexList;
-    // index_name - attrbute_type pair
-
 private:
     std::string name;
     std::vector<std::string> attrNames;

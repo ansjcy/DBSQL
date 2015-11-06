@@ -30,10 +30,12 @@ int main(void){
     //fp.open("/Users/jason/Desktop/file", ios::in|ios::binary);
     //freopen("/Users/jason/Desktop/file", "r", stdin);
     while (true) {
+        cout<<">>";
         AUX* neww =  interpreter.dealInput();
         if(neww->quit)
             return 0;
         api.chooseCommand(neww);
+        cout<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@"<<endl;
     }
             cout<<"haha";
 }
@@ -44,8 +46,11 @@ int main(void){
 //insert into haha values('fuck', 123, 123.33);
 //insert into haha values('zhzhang', 1, 2.22);
 //select * from haha where dep='fuck' and age = 123;
+//select * from haha where age = 1;
 //select * from haha;
-//delete from haha;
+//select * from haha where dep = 'abcde';
+//delete from haha where age = 1;
+//delete from haha where dep = 'fuck';
 //create index iii on haha ( dep ) ;
 //drop table haha;
 //create index iii on haha (age) ;

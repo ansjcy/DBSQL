@@ -26,6 +26,7 @@ public:
     AUX* dealInput();
     void dealInput(stringstream input);
     AUX* getInput();
+    AUX* getInputExec();
     AUXCreateTable* dealCreateTable(AUX* sentence);
     AUXDropTable* dealDropTable(AUX* sentence);
     AUXCreateIndex* dealCreateIndex(AUX* sentence);

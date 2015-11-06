@@ -63,7 +63,7 @@ public:
     conditionJudge(){flag = true;}
     bool isSatisfied(char *p);
     bool isSatisfied(void *pt);
-    ~conditionJudge(){delete cond;}
+    //~conditionJudge(){if(!flag) delete cond;}
 };
 
 class recorder
