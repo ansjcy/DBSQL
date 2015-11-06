@@ -571,7 +571,8 @@ void BPlusTree::remove(const AttrType &k) {
 }
 
 
-std::vector<int> BPlusTree::findLeft(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b)) {
+//std::vector<int> BPlusTree::findLeft(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b)) {
+std::vector<int> BPlusTree::findLeft(const AttrType &k) {
 	std::vector<int> rst;
 
 	int pos = rootPos;
@@ -587,7 +588,7 @@ std::vector<int> BPlusTree::findLeft(const AttrType &k, bool (*cmp)(const AttrTy
 	while( ~pos ) {
 	// attention when the last p of the last leaf is null
 		for( int i = 0; i < node.getKSize(); i++ ) {
-			if( cmp(node.getK(i), k) ) {
+			if( node.getK(i) <= k) ) {
 				rst.push_back(node.getP(i));
 			}
 			else {
@@ -600,7 +601,8 @@ std::vector<int> BPlusTree::findLeft(const AttrType &k, bool (*cmp)(const AttrTy
 	return rst;
 }
 
-std::vector<int> BPlusTree::findRight(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b)) {
+//std::vector<int> BPlusTree::findRight(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b)) {
+std::vector<int> BPlusTree::findRight(const AttrType &k) {
 	std::vector<int> rst;
 
 	int pos = _findLeaf(k);
@@ -609,7 +611,7 @@ std::vector<int> BPlusTree::findRight(const AttrType &k, bool (*cmp)(const AttrT
 		bufferManager->getBlock(filename, pos, tmpBlock_);
 		Node node(tmpBlock_);
 		for( int i = 0; i < node.getKSize(); i++ ) {
-			if( cmp(node.getK(i), k) ) {
+			if( node.getK(i) >= k ) {
 				rst.push_back(node.getP(i));
 			}
 			else {

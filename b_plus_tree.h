@@ -203,9 +203,10 @@ public:
 	int find(const AttrType &k);
 	void insert(const AttrType &k, int p);
 	void remove(const AttrType &k);
-	std::vector<int> findLeft(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b));
-	std::vector<int> findRight(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b));
-
+//	std::vector<int> findLeft(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b));
+//	std::vector<int> findRight(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b));
+	std::vector<int> findLeft(const AttrType &k);
+	std::vector<int> findRight(const AttrType &k);
 };
 
 class IndexManager {
@@ -296,7 +297,7 @@ public:
 	}
 
 	void dropIndex(std::string filename) {
-
+		bufferManager.r.dropTable(filename);
 	}
 
 };
