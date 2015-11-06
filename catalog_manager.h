@@ -112,13 +112,23 @@ private:
 class CatalogManager {
 public:
 	// deal with table
+
 	void createTableInfo(const TableInfo& tableInfo);
 	void dropTableInfo(std::string tableName);
 	TableInfo getTableInfo(const std::string& tableName);
 	void writeTableInfo(const TableInfo& tableInfo);
     
     //what i need...
-    bool hasTable(std::string tableName){return true;}
+    bool hasTable(std::string tableFileName) {
+	    std::ifstream tableListInFile("/Users/jason/Desktop/tableList.txt");
+		std::string tmpStr;
+		std::vector<std::string> tableList;
+
+		while( std::getline(tableListInFile, tmpStr) ) {
+			if( tmpStr == tableFileName ) return true;
+		}
+		return false;
+    }
 };
 
 #endif
