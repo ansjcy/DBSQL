@@ -73,14 +73,17 @@ freeList::freeList(string& fileAddr, short elementSize)
 
 freeList::~freeList()
 {
-    fstream file;
-    file.open(fileAddr, ofstream::out| ios_base::trunc);
-    file << numOfblocks << " ";
-    file << offset.size() << " ";
-    vector<long>::iterator p;
-    for(p = offset.begin(); p != offset.end(); p++)
-        file << *p << " ";
-    file.close();
+    if(numOfblocks != -1)
+    {
+        fstream file;
+        file.open(fileAddr, ofstream::out| ios_base::trunc);
+        file << numOfblocks << " ";
+        file << offset.size() << " ";
+        vector<long>::iterator p;
+        for(p = offset.begin(); p != offset.end(); p++)
+            file << *p << " ";
+        file.close();
+    }
 }
 
 vector<void*> recorder::selectWhereNoIndex(string& tableName, conditionJudge& judger)
@@ -148,8 +151,9 @@ bool recorder::updateWhere(string& tableName, long offset, void* data)
 }
 
 
-vector<void*> recorder::selectNoWhere(string& tableName)
+vector<void*> recorder::selectNoWhere(string& tableName, vector<long>* addr)
 {
+    
     int index = table2Freelist[tableName];
     vector<void*> vec;
     freeList* fp = freeListVector[index];
@@ -171,11 +175,36 @@ vector<void*> recorder::selectNoWhere(string& tableName)
             if(isAllZero(p, eachSize) == false)
             {
                 vec.push_back(p);
+                if(addr != NULL)
+                    addr->push_back(i*BUFFERSIZE_LIMIT + k*eachSize);
             }
         }
     }
     return vec;
 }
+
+bool recorder::dropTable(string& tableName)
+{
+    int index = table2Freelist[tableName];
+    freeList* flp = freeListVector[index];
+    remove(flp->fileAddr.c_str());
+    for(int i = 0; i < flp->numOfblocks; i++)
+    {
+        long index = bm->getIndex(tableName, i*BUFFERSIZE_LIMIT);
+        if(index != -1)
+        {
+            bm->freeBuffer(index, false);
+        }
+    }
+    flp->numOfblocks = -1;
+    delete flp;
+    table2Freelist.erase(tableName);
+    freelist2Table.erase(index);
+    freeListVector.erase(freeListVector.begin() + index);
+    return true;
+}
+
+
 
 
 long recorder::insert(void* data, string& tableName)
@@ -241,7 +270,6 @@ bool recorder::deleteWhereNoIndex(string& tableName, conditionJudge& judger)
     eachSize = fp->elementSize;
     for(int i = 0; i < num; i++)
     {
-        
         int index = bm->mallocBuffer();
         bm->readData(tableName, i*BUFFERSIZE_LIMIT, index);
         for(int j = 0; (j+1)*eachSize < 4096; j++)
@@ -518,6 +546,7 @@ bool isCharEqual(char* src, string& op, string& value,int len)
 bool conditionJudge::isSatisfied(char * p)
 {
     
+    if(this->flag) return true;
     bool flag = false;
     for(int i = 0; i < elementSize; i++)
     {
@@ -550,8 +579,11 @@ bool conditionJudge::isSatisfied(char * p)
     return true;
 }
 
+
+
 bool conditionJudge::isSatisfied(void * pt)
 {
+    if(this->flag == true) return true;
     char * p = (char *)pt;
     bool flag = false;
     for(int i = 0; i < elementSize; i++)
