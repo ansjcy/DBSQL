@@ -254,8 +254,8 @@ void API::createIndex(AUXCreateIndex* cast_command)  //done
     table_info.getAttr(attr_name).setHasIndex(true);
     im.createIndex(tmpIndexName);
     vector<int> AttrAddr;
-    AttrType attr_value;
-    map<AttrType, int> datalist;
+    AttrVal attr_value;
+    map<AttrVal, int> datalist;
     vector<string> attrNames = table_info.getAttrNames();
     //string& tableName, vector<long>* addr = NULL
     vector<void*> result = rm.selectNoWhere(tmpFileAddr, &AttrAddr);
@@ -272,7 +272,7 @@ void API::createIndex(AUXCreateIndex* cast_command)  //done
             if(type == thisType) //int
             {
                 //cout<<*(int*)((char*)result[j]+size)<<"\t";
-                attr_value = AttrType(*(int*)((char*)result[j]+size));
+                attr_value = AttrVal(*(int*)((char*)result[j]+size));
                 datalist[attr_value] = AttrAddr[k++];
                 size += 4;
                 
@@ -280,7 +280,7 @@ void API::createIndex(AUXCreateIndex* cast_command)  //done
             else if(type == thisType) //float
             {
                 //cout<<*(float*)((char *)result[j]+size)<<"\t";
-                attr_value = AttrType(*(float*)((char*)result[j]+size));
+                attr_value = AttrVal(*(float*)((char*)result[j]+size));
                 datalist[attr_value] = AttrAddr[k++];
                 size += 4;
             }
@@ -289,7 +289,7 @@ void API::createIndex(AUXCreateIndex* cast_command)  //done
                 int temp = table_info.getAttr(attrNames[i]).getStrLen();
                 //cout<<setw(temp) <<(char*)result[j]+size<<"\t";
                 
-                attr_value = AttrType(*(char*)((char*)result[j]+size));
+                attr_value = AttrVal(*(char*)((char*)result[j]+size));
                 datalist[attr_value] = AttrAddr[k];
                 k+=temp;
 
@@ -479,8 +479,8 @@ void API::InsertInto(AUXInsertInto* cast_command)  //done
     //insert and update index..
     string tmpFileAddr = file_addr + table_name;
     int offset = (int)rm.insert(dt, tmpFileAddr);
-    map<AttrType, int> datalist;
-    AttrType attr_value;
+    map<AttrVal, int> datalist;
+    AttrVal attr_value;
     //attrs and values
     for(int i = 0; i < attrs.size(); i++)
     {
@@ -501,7 +501,7 @@ void API::InsertInto(AUXInsertInto* cast_command)  //done
                 attr_value.datas = values[i];
             }
             
-            datalist[AttrType(attr_value)] = offset;
+            datalist[AttrVal(attr_value)] = offset;
         }
     }
     im.insertIntoIndex(datalist);
@@ -682,10 +682,10 @@ void API::selectFrom(AUXSelectFrom* cast_command)
         }
         else{
             vector<int> offset;
-            //std::vector<int> findLeft(const AttrType &k);
-            //std::vector<int> findInIndex(std::vector<AttrType> datalist)
+            //std::vector<int> findLeft(const AttrVal &k);
+            //std::vector<int> findInIndex(std::vector<AttrVal> datalist)
             int type = cond->operator[](0).type;
-            vector<AttrType> datalist;
+            vector<AttrVal> datalist;
             string tmpFileAddr = file_addr + table_name;
             
             string attr_name = where[0].attribute;
@@ -693,18 +693,18 @@ void API::selectFrom(AUXSelectFrom* cast_command)
             int rootPos = table_info.getAttr(attr_name).indexRootOffset;
             im.getIndex(tmpIndexName, rootPos);
             
-            AttrType attr_value;
+            AttrVal attr_value;
             if(type == 0)
             {
-                attr_value = AttrType(stoi(cond->operator[](0).value));
+                attr_value = AttrVal(stoi(cond->operator[](0).value));
             }
             else if(type == 1)
             {
-                attr_value = AttrType(stof(cond->operator[](0).value));
+                attr_value = AttrVal(stof(cond->operator[](0).value));
             }
             else if(type == 2)
             {
-                attr_value = AttrType(cond->operator[](0).value);
+                attr_value = AttrVal(cond->operator[](0).value);
             }
             
             datalist.push_back(attr_value);
@@ -918,28 +918,28 @@ void API::deleteFrom(AUXDeleteFrom* cast_command)
         //with one condition and has index
         else{
             vector<int> offset;
-            //std::vector<int> findLeft(const AttrType &k);
-            //std::vector<int> findInIndex(std::vector<AttrType> datalist)
+            //std::vector<int> findLeft(const AttrVal &k);
+            //std::vector<int> findInIndex(std::vector<AttrVal> datalist)
             int type = condNoIndex->operator[](0).type;
-            vector<AttrType> datalist;
+            vector<AttrVal> datalist;
             
             string attr_name = where[0].attribute;
             string tmpIndexName = tmpFileAddr + "_" + attr_name + ".index";
             int rootPos = table_info.getAttr(attr_name).indexRootOffset;
             im.getIndex(tmpIndexName, rootPos);
             
-            AttrType attr_value;
+            AttrVal attr_value;
             if(type == 0)
             {
-                attr_value = AttrType(stoi(condNoIndex->operator[](0).value));
+                attr_value = AttrVal(stoi(condNoIndex->operator[](0).value));
             }
             else if(type == 1)
             {
-                attr_value = AttrType(stof(condNoIndex->operator[](0).value));
+                attr_value = AttrVal(stof(condNoIndex->operator[](0).value));
             }
             else if(type == 2)
             {
-                attr_value = AttrType(condNoIndex->operator[](0).value);
+                attr_value = AttrVal(condNoIndex->operator[](0).value);
             }
             
             datalist.push_back(attr_value);

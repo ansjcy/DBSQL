@@ -10,7 +10,7 @@
 #include "recorder.hpp"
 //#include "indexManager.hpp"
 #include "catalog_manager.h"
-#include "b_plus_tree.h"
+#include "IndexManager.h"
 string tmp = "/Users/jason/Desktop/data";
 recorder rm(tmp);
 IndexManager im(&rm);

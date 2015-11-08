@@ -13,7 +13,7 @@
 //#include "indexManager.hpp"
 #include "catalog_manager.h"
 #include "recorder.hpp"
-#include "b_plus_tree.h"
+#include "IndexManager.h"
 #include <stdio.h>
 //           1.create table 2.XX ( 3. name type (size), , , );
 //           1.drop table 2.xx ;

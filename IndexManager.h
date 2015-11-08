@@ -16,7 +16,6 @@
 #include "recorder.hpp"
 
 #define BLOCK_SIZE 4096
-
 #define TEMP_FANOUT 100
 
 class Block {
@@ -85,19 +84,19 @@ public:
 };
 
 
-class AttrType {
+class AttrVal {
 public:
     int typeId;
     int datai;
     float dataf;
     std::string datas;
-    AttrType() {}
-    AttrType(int i): datai(i), typeId(0) {}
-    AttrType(float f): dataf(f), typeId(1)  {}
-    AttrType(char s[]): datas(std::string(s)), typeId(2)  {}
-    AttrType(std::string s): datas(s), typeId(2)  {}
+    AttrVal() {}
+    AttrVal(int i): datai(i), typeId(0) {}
+    AttrVal(float f): dataf(f), typeId(1)  {}
+    AttrVal(char s[]): datas(std::string(s)), typeId(2)  {}
+    AttrVal(std::string s): datas(s), typeId(2)  {}
     
-    friend bool operator<(const AttrType &op1, const AttrType &op2) {
+    friend bool operator<(const AttrVal &op1, const AttrVal &op2) {
         if( op1.typeId == 0 ) return op1.datai < op2.datai;
         if( op1.typeId == 1 ) return op1.dataf < op2.dataf;
         if( op1.typeId == 2 ) return op1.datas < op2.datas;
@@ -105,7 +104,7 @@ public:
         return true;
     }
     
-    friend bool operator==(const AttrType &op1, const AttrType &op2) {
+    friend bool operator==(const AttrVal &op1, const AttrVal &op2) {
         if( op1.typeId == 0 ) return op1.datai == op2.datai;
         if( op1.typeId == 1 ) return op1.dataf == op2.dataf;
         if( op1.typeId == 2 ) return op1.datas == op2.datas;
@@ -113,10 +112,10 @@ public:
         return true;
     }
     
-    friend bool operator>(const AttrType &op1, const AttrType &op2) { return !(op1 == op2 || op1 < op2); }
-    friend bool operator<=(const AttrType &op1, const AttrType &op2) { return !( op1 > op2); }
-    friend bool operator>=(const AttrType &op1, const AttrType &op2) { return !( op1 < op2); }
-    friend bool operator!=(const AttrType &op1, const AttrType &op2) { return !( op1 == op2); }
+    friend bool operator>(const AttrVal &op1, const AttrVal &op2) { return !(op1 == op2 || op1 < op2); }
+    friend bool operator<=(const AttrVal &op1, const AttrVal &op2) { return !( op1 > op2); }
+    friend bool operator>=(const AttrVal &op1, const AttrVal &op2) { return !( op1 < op2); }
+    friend bool operator!=(const AttrVal &op1, const AttrVal &op2) { return !( op1 == op2); }
     
 };
 
@@ -133,7 +132,7 @@ private:
     
 public:
     std::vector<int> P;
-    std::vector<AttrType> K;
+    std::vector<AttrVal> K;
     
     void resetByBlock(const Block &blk);
     Node();
@@ -144,16 +143,16 @@ public:
     bool isLeaf();
     void setRoot(bool _isroot) {isroot = _isroot; }
     void setLeaf(bool _isleaf) {isleaf = _isleaf; }
-    void appendK(const AttrType &_k);
+    void appendK(const AttrVal &_k);
     void appendP(int _p);
     void popK();
     void popP();
     int getKSize();
     int getPSize();
-    AttrType getK(int i);
+    AttrVal getK(int i);
     int getP(int i);
-    void insert(const AttrType &k, int p, int i);
-    void remove(const AttrType &k, int p, int i);
+    void insert(const AttrVal &k, int p, int i);
+    void remove(const AttrVal &k, int p, int i);
 };
 
 
@@ -168,9 +167,9 @@ public:
     int typeId, strLen;
     std::stack<int> stk;
     //BufferManager bufferManager;
-    int _findLeaf(const AttrType &k);
-    void _insertNewBlk(Block &blk1, const AttrType &k, Block &blk2);
-    void _remove(Block blk, AttrType k);
+    int _findLeaf(const AttrVal &k);
+    void _insertNewBlk(Block &blk1, const AttrVal &k, Block &blk2);
+    void _remove(Block blk, AttrVal k);
     
     
     BufferManager* bufferManager;
@@ -200,13 +199,13 @@ public:
     int getTypeId() { return typeId; }
     int getStrLen() { return strLen; }
     
-    int find(const AttrType &k);
-    void insert(const AttrType &k, int p);
-    void remove(const AttrType &k);
-    //	std::vector<int> findLeft(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b));
-    //	std::vector<int> findRight(const AttrType &k, bool (*cmp)(const AttrType &a,const AttrType &b));
-    std::vector<int> findLeft(const AttrType &k);
-    std::vector<int> findRight(const AttrType &k);
+    int find(const AttrVal &k);
+    void insert(const AttrVal &k, int p);
+    void remove(const AttrVal &k);
+    //	std::vector<int> findLeft(const AttrVal &k, bool (*cmp)(const AttrVal &a,const AttrVal &b));
+    //	std::vector<int> findRight(const AttrVal &k, bool (*cmp)(const AttrVal &a,const AttrVal &b));
+    std::vector<int> findLeft(const AttrVal &k);
+    std::vector<int> findRight(const AttrVal &k);
 };
 
 class IndexManager {
@@ -270,8 +269,8 @@ public:
         return rootBlock.pos;
     }
     
-    void insertIntoIndex(std::map<AttrType, int> datalist) {
-        std::map<AttrType, int>::iterator it;
+    void insertIntoIndex(std::map<AttrVal, int> datalist) {
+        std::map<AttrVal, int>::iterator it;
         for( it = datalist.begin(); it != datalist.end(); it++ ) {
             std::cout << "==>insertIntoIndex" <<it->first.datai << " " << it->second << std::endl;
             btree.insert(it->first, it->second);
@@ -279,10 +278,10 @@ public:
         }
     }
     
-    std::vector<int> findInIndex(std::vector<AttrType> datalist) {
+    std::vector<int> findInIndex(std::vector<AttrVal> datalist) {
         std::vector<int> rst;
         
-        std::vector<AttrType>::iterator it;
+        std::vector<AttrVal>::iterator it;
         for( it = datalist.begin(); it != datalist.end(); it++ ) {
             int tmpRst;
             //tmpRst = btree._findLeaf(*it); 
@@ -293,10 +292,10 @@ public:
         return rst;
     }
     
-    void deleteFromIndex(std::vector<AttrType> datalist) {
+    void deleteFromIndex(std::vector<AttrVal> datalist) {
         std::vector<int> rst;
         
-        std::vector<AttrType>::iterator it;
+        std::vector<AttrVal>::iterator it;
         for( it = datalist.begin(); it != datalist.end(); it++ ) {
             btree.remove(*it);
         }	
